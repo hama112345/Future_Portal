@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f0e4">
+    <meta name="description" content="16の質問で、お金・健康・災害の3つのジャンルから日常のリスクへの防衛力を診断します。">
+    <title>AI 危機管理アセスメント</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #1b2340;
+            --ink-2: #2d3961;
+            --text: #2a3047;
+            --muted: #62677a;
+            --paper: #f5f0e4;
+            --card: #fffdf8;
+            --line: #e5dac2;
+            --gold: #c39a45;
+            --gold-deep: #8a6420;
+            --gold-soft: #f6ecd2;
+            --gold-line: #ead9ad;
+
+            /* ジャンル別の色（A:お金・仕事 / B:健康・メンタル / C:災害・デジタル） */
+            --area-a: #b8862b; --area-a-bg: #f6ecd4; --area-a-ink: #6f5118;
+            --area-b: #2f7a66; --area-b-bg: #dcefe7; --area-b-ink: #1f5848;
+            --area-c: #3f5f9e; --area-c-bg: #e1e8f5; --area-c-ink: #2d4781;
+
+            --alert: #ad4337; --alert-bg: #f8e3df;
+            --shadow: 0 1px 0 rgba(27,35,64,.04), 0 10px 24px -14px rgba(27,35,64,.28);
+            --font: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
+            --col: 680px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: var(--font);
+            color: var(--text);
+            line-height: 1.75;
+            background: var(--paper);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* 背景の淡い光。スクロールしても動かないよう固定レイヤーに置く */
+        body::before {
+            content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(900px 520px at 105% -8%, rgba(195,154,69,.20), transparent 62%),
+                radial-gradient(760px 480px at -12% 108%, rgba(47,122,102,.13), transparent 60%);
+        }
+        button { font: inherit; color: inherit; }
+        .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+        /* ===== ヘッダー ===== */
+        .topbar {
+            position: sticky; top: 0; z-index: 20;
+            background: rgba(245,240,228,.88);
+            backdrop-filter: saturate(1.4) blur(12px);
+            -webkit-backdrop-filter: saturate(1.4) blur(12px);
+            border-bottom: 1px solid var(--line);
+        }
+        .topbar-inner {
+            max-width: var(--col); margin: 0 auto;
+            padding: 11px 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .brand .emblem { width: 40px; height: 40px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(27,35,64,.2)); }
+        .brand small {
+            display: block; font-size: .6rem; font-weight: 700; line-height: 1.3;
+            letter-spacing: .2em; color: var(--gold-deep);
+        }
+        .brand h1 {
+            font-size: 1.02rem; font-weight: 900; line-height: 1.35; color: var(--ink);
+            letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .counter {
+            flex-shrink: 0;
+            font-size: .76rem; font-weight: 700; line-height: 1.6;
+            color: #fbf7ec; background: var(--ink);
+            border-radius: 999px; padding: 3px 12px;
+            font-variant-numeric: tabular-nums;
+        }
+        .progress { height: 3px; background: rgba(27,35,64,.08); }
+        .progress > i {
+            display: block; height: 100%; width: 0;
+            background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+            transition: width .45s ease;
+        }
+
+        /* ===== チャット ===== */
+        main { flex: 1; width: 100%; max-width: var(--col); margin: 0 auto; padding: 20px 16px 8px; }
+        .chat { display: flex; flex-direction: column; gap: 14px; }
+
+        .msg { display: flex; gap: 10px; align-items: flex-start; }
+        .msg-user { justify-content: flex-end; }
+        .avatar { width: 38px; height: 38px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(27,35,64,.18)); }
+
+        .bubble {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 4px 18px 18px 18px;
+            padding: 13px 16px;
+            max-width: calc(100% - 48px);
+            box-shadow: var(--shadow);
+            font-size: .95rem;
+        }
+        .bubble p + p { margin-top: 6px; }
+        .bubble strong { color: var(--ink); }
+        .msg-user .bubble {
+            background: var(--ink); border-color: var(--ink); color: #fbf7ec;
+            border-radius: 18px 4px 18px 18px;
+            padding: 10px 16px; max-width: 82%;
+            font-weight: 700;
+        }
+        .anim { animation: rise .42s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+
+        .note { font-size: .8rem; color: var(--muted); }
+
+        .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .q-no { font-size: .82rem; font-weight: 900; letter-spacing: .06em; color: var(--gold-deep); }
+        .tag { font-size: .7rem; font-weight: 700; line-height: 1.7; border-radius: 999px; padding: 1px 9px; }
+        .tag-a { background: var(--area-a-bg); color: var(--area-a-ink); }
+        .tag-b { background: var(--area-b-bg); color: var(--area-b-ink); }
+        .tag-c { background: var(--area-c-bg); color: var(--area-c-ink); }
+        .tag-n { background: #ece5d3; color: var(--muted); }
+        .q-text { font-weight: 500; color: var(--ink); }
+
+        .typing { display: inline-flex; gap: 5px; padding: 6px 2px; }
+        .typing span {
+            width: 7px; height: 7px; border-radius: 50%; background: var(--gold);
+            animation: blink 1.2s infinite ease-in-out both;
+        }
+        .typing span:nth-child(1) { animation-delay: -.3s; }
+        .typing span:nth-child(2) { animation-delay: -.15s; }
+        @keyframes blink { 0%, 80%, 100% { transform: scale(.35); opacity: .5; } 40% { transform: scale(1); opacity: 1; } }
+
+        /* ===== はじめに・同意 ===== */
+        .areas-intro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 8px; }
+        .area-chip {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 10px 4px; border-radius: 12px;
+            font-size: .74rem; font-weight: 700; line-height: 1.35; text-align: center;
+            word-break: keep-all;
+        }
+        .area-chip svg { width: 22px; height: 22px; }
+        .chip-a { background: var(--area-a-bg); color: var(--area-a-ink); }
+        .chip-b { background: var(--area-b-bg); color: var(--area-b-ink); }
+        .chip-c { background: var(--area-c-bg); color: var(--area-c-ink); }
+        .meta-line { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--muted); }
+        .meta-line span::before { content: '・'; color: var(--gold); }
+
+        .consent { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+        .consent-box {
+            margin-top: 8px;
+            max-height: 230px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            background: #fbf8f0; border: 1px solid var(--line); border-radius: 12px;
+            padding: 12px 14px;
+            font-size: .78rem; line-height: 1.75; color: var(--muted);
+        }
+        .consent-box h4 { font-size: .8rem; color: var(--ink); margin: 10px 0 2px; }
+        .consent-box h4:first-child { margin-top: 0; }
+        .consent-box ul { padding-left: 1.2em; }
+        .consent-box:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+        .placeholder { color: #b91c1c; font-weight: 700; }
+        .consent-check {
+            display: flex; align-items: flex-start; gap: 10px;
+            margin-top: 10px; padding: 11px 12px;
+            background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: 12px;
+            font-size: .85rem; font-weight: 700; line-height: 1.55; color: var(--ink);
+            cursor: pointer;
+        }
+        .consent-check input { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; accent-color: var(--ink); cursor: pointer; }
+        .consent-done {
+            margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line);
+            display: flex; align-items: center; gap: 6px;
+            font-size: .85rem; font-weight: 700; color: var(--area-b-ink);
+        }
+        .consent-done svg { width: 18px; height: 18px; }
+
+        /* ===== 回答エリア ===== */
+        .dock {
+            position: sticky; bottom: 0; z-index: 15;
+            background: linear-gradient(to top, var(--paper) 72%, rgba(245,240,228,0));
+            padding: 18px 16px calc(14px + env(safe-area-inset-bottom));
+        }
+        .dock-inner { max-width: var(--col); margin: 0 auto; display: flex; flex-direction: column; gap: 6px; }
+        .dock-inner:empty { display: none; }
+
+        .choices { display: grid; gap: 8px; }
+        .choices-1 { grid-template-columns: 1fr; }
+        .choices-2 { grid-template-columns: repeat(2, 1fr); }
+        .choices-3 { grid-template-columns: repeat(3, 1fr); }
+        .choice {
+            position: relative;
+            min-height: 52px; padding: 12px;
+            background: var(--card); color: var(--ink);
+            border: 1.5px solid var(--ink); border-radius: 14px;
+            font-size: .95rem; font-weight: 700; line-height: 1.45;
+            box-shadow: 0 2px 0 rgba(27,35,64,.1);
+            cursor: pointer;
+            transition: background .15s, color .15s, transform .15s;
+        }
+        .choices-1 .choice { text-align: left; padding: 12px 16px; }
+        .choice:hover { background: var(--ink); color: #fbf7ec; transform: translateY(-1px); }
+        .choice:active { transform: translateY(1px); }
+        .choice.is-prev { border-color: var(--gold-deep); box-shadow: inset 0 0 0 1.5px var(--gold); }
+        .choice.is-prev::after {
+            content: '前回'; position: absolute; top: -9px; right: 10px;
+            font-size: .62rem; line-height: 1.6; color: #fff;
+            background: var(--gold-deep); border-radius: 999px; padding: 0 7px;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: var(--ink); color: #fbf7ec;
+            border: none; border-radius: 14px;
+            font-size: 1.02rem; font-weight: 900; letter-spacing: .04em;
+            box-shadow: inset 0 0 0 1px rgba(195,154,69,.55), 0 10px 22px -12px rgba(27,35,64,.7);
+            cursor: pointer;
+            transition: background .15s, transform .15s;
+        }
+        .btn-primary:hover { background: var(--ink-2); transform: translateY(-1px); }
+        .btn-primary:disabled { background: #cfc8b6; color: #f7f3ea; box-shadow: none; transform: none; cursor: not-allowed; }
+        .btn-back {
+            align-self: center;
+            background: none; border: none; padding: 6px 10px;
+            font-size: .82rem; font-weight: 700; color: var(--muted);
+            cursor: pointer;
+        }
+        .btn-back:hover { color: var(--ink); }
+        .choice:focus-visible, .btn-primary:focus-visible, .btn-back:focus-visible,
+        .btn-copy:focus-visible, .btn-restart:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+        /* ===== 診断結果 ===== */
+        .result {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 26px 18px 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            scroll-margin-top: 84px;
+        }
+        .medal { position: relative; width: min(280px, 80%); aspect-ratio: 1; margin: 0 auto 4px; }
+        .medal::before {
+            content: ''; position: absolute; inset: -8%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(195,154,69,.34) 0%, rgba(195,154,69,0) 66%);
+        }
+        .medal img {
+            position: relative; display: block; width: 100%; height: 100%; object-fit: contain;
+            animation: medal-in .9s cubic-bezier(.2,.8,.2,1) both;
+        }
+        @keyframes medal-in { from { opacity: 0; transform: scale(.86) rotate(-8deg); } }
+        .type-kicker {
+            display: inline-block; margin-top: 4px;
+            font-size: .78rem; font-weight: 700; color: var(--gold-deep);
+            background: var(--gold-soft); border: 1px solid var(--gold-line);
+            border-radius: 999px; padding: 2px 12px;
+        }
+        .type-name {
+            margin: 6px 0 18px;
+            font-size: 1.55rem; font-weight: 900; line-height: 1.35; letter-spacing: .02em; color: var(--ink);
+        }
+
+        .score {
+            position: relative; overflow: hidden; text-align: left;
+            color: #f3eedf;
+            background: linear-gradient(155deg, #1b2340 0%, #2a3660 100%);
+            border-radius: 18px; padding: 18px;
+            box-shadow: inset 0 0 0 1px rgba(195,154,69,.35);
+        }
+        .score::after {
+            content: ''; position: absolute; right: -46px; top: -46px;
+            width: 160px; height: 160px; border-radius: 50%;
+            border: 1px solid rgba(195,154,69,.22);
+            box-shadow: 0 0 0 18px rgba(195,154,69,.05);
+        }
+        .score-top { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .score-label { font-size: .74rem; font-weight: 700; letter-spacing: .14em; color: #d9c48f; }
+        .score-num { font-size: 3.2rem; font-weight: 900; line-height: 1.05; color: #fff; font-variant-numeric: tabular-nums; }
+        .score-num small { margin-left: 4px; font-size: 1rem; font-weight: 700; color: #d9c48f; }
+        .seal {
+            width: 68px; height: 68px; flex-shrink: 0; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--ink);
+            box-shadow: 0 0 0 3px rgba(255,255,255,.12), 0 6px 14px rgba(0,0,0,.35);
+        }
+        .seal span { font-size: .55rem; font-weight: 700; letter-spacing: .16em; line-height: 1; }
+        .seal b { font-size: 1.9rem; font-weight: 900; line-height: 1.05; }
+        .seal-S { background: radial-gradient(circle at 35% 30%, #fff3cc, #d9b25a 55%, #9c7425); }
+        .seal-A { background: radial-gradient(circle at 35% 30%, #ffffff, #c9d1de 55%, #8794ab); }
+        .seal-B { background: radial-gradient(circle at 35% 30%, #ffe4cc, #c98d5b 55%, #8a5531); }
+        .seal-C { background: radial-gradient(circle at 35% 30%, #ffd9d2, #cf6a5c 55%, #8d3329); color: #fff; }
+        .score-bar { position: relative; z-index: 1; height: 10px; margin: 12px 0 10px; background: rgba(255,255,255,.14); border-radius: 99px; overflow: hidden; }
+        .score-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #a77d2c, #e7c87a); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+        .rank-name { position: relative; z-index: 1; font-size: .88rem; font-weight: 700; }
+
+        .section { margin-top: 22px; text-align: left; }
+        .section h3 {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+            font-size: .98rem; font-weight: 900; color: var(--ink);
+        }
+        .section h3::before { content: ''; width: 18px; height: 2px; border-radius: 2px; background: var(--gold); }
+        .section p { font-size: .94rem; }
+        .panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+        .panel-quiet { background: #fbf8f0; border-style: dashed; border-color: #d8caa6; }
+
+        .meters { display: grid; gap: 12px; }
+        .meter-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .meter-head svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .meter-name { font-size: .86rem; font-weight: 700; color: var(--ink); }
+        .meter-val { margin-left: auto; font-size: .86rem; font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums; }
+        .meter-val small { font-weight: 500; color: var(--muted); }
+        .weak-tag { font-size: .66rem; font-weight: 700; line-height: 1.7; color: #fff; background: var(--alert); border-radius: 999px; padding: 0 8px; }
+        .meter-track { height: 10px; background: #efe8d8; border-radius: 99px; overflow: hidden; }
+        .meter-track i { display: block; height: 100%; width: 0; border-radius: 99px; transition: width 1s .2s cubic-bezier(.2,.8,.2,1); }
+        .meter-a .meter-head { color: var(--area-a); } .meter-a .meter-track i { background: var(--area-a); }
+        .meter-b .meter-head { color: var(--area-b); } .meter-b .meter-track i { background: var(--area-b); }
+        .meter-c .meter-head { color: var(--area-c); } .meter-c .meter-track i { background: var(--area-c); }
+        .meter.is-weak { margin: -6px -8px; padding: 6px 8px; border-radius: 10px; background: var(--alert-bg); }
+
+        .magic {
+            margin-top: 22px; text-align: left;
+            background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: 16px;
+            padding: 16px;
+        }
+        .magic h3 { font-size: .92rem; font-weight: 900; color: var(--gold-deep); }
+        .magic .note { margin-top: 2px; }
+        .magic blockquote {
+            margin: 10px 0 12px; padding: 12px 14px;
+            background: rgba(255,255,255,.72); border-radius: 10px;
+            font-size: .95rem; font-weight: 700; line-height: 1.75; color: var(--ink);
+        }
+        .btn-copy {
+            width: 100%; padding: 11px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: #fff; color: var(--gold-deep);
+            border: 1.5px solid var(--gold-deep); border-radius: 12px;
+            font-weight: 700; cursor: pointer;
+        }
+        .btn-copy svg { width: 18px; height: 18px; }
+        .btn-copy:hover { background: #fffaf0; }
+        .btn-restart {
+            width: 100%; margin-top: 20px; padding: 13px;
+            background: transparent; color: var(--ink);
+            border: 1.5px solid var(--line); border-radius: 14px;
+            font-weight: 700; cursor: pointer;
+        }
+        .btn-restart:hover { background: #fbf8f0; }
+
+        .err {
+            background: var(--alert-bg); border: 1px solid #e9b9b1; border-radius: 12px;
+            padding: 12px 14px; font-size: .88rem; color: #8a2f25;
+        }
+        .err small { display: block; margin-top: 6px; font-size: .7rem; opacity: .75; word-break: break-all; }
+
+        #toast {
+            position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 50;
+            transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+            background: var(--ink); color: #fbf7ec;
+            padding: 10px 18px; border-radius: 999px;
+            font-size: .85rem; font-weight: 700;
+            box-shadow: 0 10px 24px -10px rgba(27,35,64,.6);
+            transition: opacity .25s, transform .25s;
+        }
+        #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        @media (max-width: 380px) {
+            .choices-3 .choice { padding: 12px 6px; font-size: .88rem; }
+            .type-name { font-size: 1.35rem; }
+            .score-num { font-size: 2.8rem; }
+            .brand small { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+        }
+
+        /* ===== ポータル同梱で追加 ===== */
+        .to-portal {
+            flex: none; display: inline-flex; align-items: center; gap: 4px;
+            font-size: .72rem; font-weight: 700; color: var(--muted);
+            text-decoration: none; padding: 5px 10px; border-radius: 999px;
+            border: 1px solid var(--line); background: var(--card);
+        }
+        .to-portal:hover { color: var(--ink); border-color: var(--gold-line); }
+        .to-portal:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+        .to-portal svg { width: 13px; height: 13px; }
+
+        .result-meta {
+            display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline;
+            gap: 4px 14px; margin: -8px 0 10px;
+            font-size: .74rem; font-weight: 700; color: var(--muted);
+        }
+        .result-meta .print-title { display: none; }
+        .result-meta b { color: var(--ink-2); font-weight: 900; }
+
+        .answers-dump { margin-top: 22px; text-align: left; }
+        .answers-dump > summary {
+            cursor: pointer; list-style: none;
+            font-size: .82rem; font-weight: 900; color: var(--gold-deep);
+            background: var(--gold-soft); border: 1px solid var(--gold-line);
+            border-radius: 999px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .answers-dump > summary::-webkit-details-marker { display: none; }
+        .answers-dump > summary::after { content: '▾'; font-size: .8em; }
+        .answers-dump[open] > summary::after { content: '▴'; }
+        .answers-dump > summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+        .dump-table {
+            width: 100%; border-collapse: collapse; margin-top: 12px;
+            background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+        }
+        .dump-table th, .dump-table td {
+            border-bottom: 1px solid var(--line); padding: 8px 10px;
+            font-size: .78rem; line-height: 1.6; text-align: left; vertical-align: top;
+        }
+        .dump-table thead th {
+            background: #fbf8f0; font-size: .72rem; font-weight: 900; color: var(--ink-2);
+            letter-spacing: .04em;
+        }
+        .dump-table tbody tr:last-child th, .dump-table tbody tr:last-child td { border-bottom: none; }
+        .dump-table .c-no { width: 3.6em; white-space: nowrap; color: var(--muted); font-weight: 900; }
+        .dump-table .c-ans { width: 6.2em; white-space: nowrap; font-weight: 900; color: var(--ink); }
+        .dump-table .c-area { width: 7.2em; white-space: nowrap; font-weight: 700; color: var(--muted); }
+        .dump-note { margin: 8px 2px 0; font-size: .72rem; color: var(--muted); }
+
+        .consent-stamp {
+            margin: 16px 2px 0; padding: 9px 12px; text-align: left;
+            font-size: .72rem; line-height: 1.75; color: var(--muted);
+            background: #fbf8f0; border: 1px dashed #d8caa6; border-radius: 10px;
+        }
+        .consent-stamp b { color: var(--ink-2); font-weight: 900; }
+        .result-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+        .btn-pdf {
+            width: 100%; border: 0; border-radius: 999px; padding: 14px 18px;
+            font-family: var(--font); font-size: 1rem; font-weight: 900; letter-spacing: .02em;
+            color: #fffdf8; background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+            box-shadow: 0 8px 18px -10px rgba(138,100,32,.8); cursor: pointer;
+        }
+        .btn-pdf:hover { filter: brightness(1.05); }
+        .btn-pdf:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+        .btn-pdf svg { width: 17px; height: 17px; vertical-align: -3px; margin-right: 6px; }
+
+        /* ===== 印刷（PDF保存） ===== */
+        @media print {
+            @page { margin: 12mm 10mm; }
+            html, body {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .topbar, .dock, #toast, .msg, .result-actions, .magic .note, .btn-copy { display: none !important; }
+            main { padding: 0 !important; max-width: none !important; }
+            .result {
+                border: 0 !important; box-shadow: none !important;
+                border-radius: 0 !important; padding: 0 !important;
+            }
+            .result-meta { justify-content: space-between; margin: 0 0 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+            .result-meta .print-title { display: block; font-size: .92rem; font-weight: 900; color: var(--ink); }
+            .medal { width: 148px !important; margin: 0 auto 2px !important; }
+            .answers-dump > summary { display: none !important; }
+            .answers-dump { margin-top: 12px; }
+            .section { margin-top: 14px; }
+            .magic { margin-top: 14px; padding: 10px 12px; }
+            .magic blockquote { margin: 6px 0 0; font-size: .9rem; }
+            .score { padding: 12px 14px; }
+            .dump-table th, .dump-table td { padding: 4px 8px; font-size: .68rem; line-height: 1.45; }
+            .dump-table thead th { font-size: .66rem; }
+            .dump-table .c-no { width: 3.1em; } .dump-table .c-area { width: 6.4em; } .dump-table .c-ans { width: 5.6em; }
+            .result, .section, .panel, .magic, .meter, .dump-table tr { break-inside: avoid; }
+            .anim { animation: none !important; }
+            .medal img { animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <svg class="sprite" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="g-gold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ecd393"/>
+                <stop offset="1" stop-color="#a77b2a"/>
+            </linearGradient>
+        </defs>
+        <symbol id="emblem" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="19.5" fill="url(#g-gold)"/>
+            <circle cx="20" cy="20" r="17.2" fill="#1b2340"/>
+            <path d="M20 9.6l7.6 2.9v6.1c0 5-3.2 8.9-7.6 10.6-4.4-1.7-7.6-5.6-7.6-10.6v-6.1z" fill="url(#g-gold)"/>
+            <path d="M16.6 19.3l2.4 2.4 4.5-4.7" fill="none" stroke="#1b2340" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </symbol>
+        <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8.5"/><path d="M9 7.8l3 4 3-4M12 11.8V17M9.4 13.2h5.2M9.4 15.4h5.2"/>
+        </symbol>
+        <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19.5s-7.5-4.6-7.5-10.1A4.1 4.1 0 0 1 12 7a4.1 4.1 0 0 1 7.5 2.4c0 5.5-7.5 10.1-7.5 10.1z"/>
+        </symbol>
+        <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 11.2L12 4.5l8 6.7"/><path d="M6.3 9.6v9.9h11.4V9.6"/><path d="M12.7 11.4l-2.1 3.3h2.8l-2.1 3.3"/>
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7L16 9.6"/>
+        </symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.7a2.2 2.2 0 0 0-2.2-2.2H6.7a2.2 2.2 0 0 0-2.2 2.2v6.6a2.2 2.2 0 0 0 2.2 2.2h1.8"/>
+        </symbol>
+    </svg>
+
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <svg class="emblem" aria-hidden="true"><use href="#emblem"/></svg>
+                <div>
+                    <small>RISK ASSESSMENT</small>
+                    <h1>AI 危機管理アセスメント</h1>
+                </div>
+            </div>
+            <div class="counter" id="counter">はじめに</div>
+            <a class="to-portal" href="../">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>
+                </svg>ポータル
+            </a>
+        </div>
+        <div class="progress"><i id="progress"></i></div>
+    </header>
+
+    <main>
+        <div class="chat" id="chat" aria-live="polite">
+            <div class="msg" id="intro">
+                <svg class="avatar" aria-hidden="true"><use href="#emblem"/></svg>
+                <div class="bubble">
+                    <p>こんにちは！AIコンシェルジュです。</p>
+                    <p>日常に潜む「見落としがちなリスク」への防衛力を、<strong>16の質問</strong>で診断します。</p>
+                    <div class="areas-intro">
+                        <div class="area-chip chip-a"><svg aria-hidden="true"><use href="#i-coin"/></svg>お金・<wbr>仕事</div>
+                        <div class="area-chip chip-b"><svg aria-hidden="true"><use href="#i-heart"/></svg>健康・<wbr>メンタル</div>
+                        <div class="area-chip chip-c"><svg aria-hidden="true"><use href="#i-home"/></svg>災害・<wbr>デジタル</div>
+                    </div>
+                    <p class="meta-line"><span>所要時間 約3分</span><span>結果は12タイプの動物で表示</span></p>
+
+                    <div class="consent" id="consent">
+                        <p>はじめる前に、<strong>ご回答の取り扱い</strong>をご確認ください。<br><span class="note">（枠の中は下にスクロールできます）</span></p>
+                        <div class="consent-box" tabindex="0" aria-label="ご回答の取り扱い">
+                            <h4>お伺いする内容</h4>
+                            年代・性別と、各質問への回答（選んだ選択肢）をお伺いします。<br>
+                            <strong>お名前・ご住所・電話番号・メールアドレスはお伺いしません。</strong>
+
+                            <h4>利用目的</h4>
+                            <ul>
+                                <li>ご本人への診断結果の表示</li>
+                                <li>その結果にもとづく、担当者とのご相談</li>
+                            </ul>
+
+                            <h4>データの保存について</h4>
+                            ご回答は<strong>診断結果を出すためにだけ使い、サーバーには保存していません。</strong>
+                            この画面を閉じると、ご回答は残りません。
+
+                            <h4>結果をPDFで残す場合</h4>
+                            ご希望があれば、結果画面から<strong>PDFとして保存・印刷</strong>できます。
+                            PDFには年代・性別、16問の回答、スコアと診断タイプが載ります。<br>
+                            担当者がご相談の記録としてお預かりする場合は、<strong>その場でお申し出ください。</strong>
+                            お預かりしたPDFは、法令に基づく場合を除き、ご本人の同意なく第三者へ提供することはありません。
+
+                            <h4>ご質問・PDFの破棄をご希望の場合</h4>
+                            <span class="placeholder">ご担当のコンサルタントまでお申し出ください。</span>
+                        </div>
+                        <label class="consent-check">
+                            <input type="checkbox" id="consentCheck">
+                            <span>上記の内容を確認し、診断の実施と、結果のPDF保存に同意します。</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="dock">
+        <div class="dock-inner" id="dock">
+            <button type="button" class="btn-primary" id="startBtn" disabled>同意して診断をはじめる</button>
+        </div>
+    </div>
+
+    <div id="toast" role="status">コピーしました</div>
+
+    <script>
+        // ==========================
+        // 設定（★導入時にここを書き換える）
+        // ==========================
+        const CONFIG = {
+            endpoint:       '',      // GASのウェブアプリURL（https://script.google.com/macros/s/.../exec）
+            token:          'test',  // GAS側の CONFIG.TOKEN と完全に同じ文字列
+            appVersion:     'v2.0.2',
+            consentVersion: '2026-10-08'
+        };
+
+        // ==========================
+        // 設問（判定ロジックと12タイプの文言は GAS 側にあります）
+        // ==========================
+        // 年代・性別の選択肢は GAS の AGE_BANDS / GENDERS と同じ並び・同じ文字列にすること
+        const AGE_BANDS = ['19歳以下', '20〜24歳', '25〜29歳', '30〜34歳', '35〜39歳', '40代', '50代以上'];
+        const GENDERS   = ['男性', '女性', '回答しない'];
+        const YES_NO    = ['はい', '少し不安', 'いいえ'];
+
+        const AREA = {
+            A: { short: 'お金・仕事',     icon: 'i-coin' },
+            B: { short: '健康・メンタル', icon: 'i-heart' },
+            C: { short: '災害・デジタル', icon: 'i-home' }
+        };
+
+        // id は GAS の AREAS・スプレッドシートの列と対応（a=お金・仕事 / b=健康・メンタル / c=災害・デジタル）
+        const QUESTIONS = {
+            a1: { area: 'A', q: '毎月のサブスクやスマホ課金、後払い決済など、自分が「何にいくら自動で払っているか」を正確に把握している？' },
+            b1: { area: 'B', q: '強いストレスや悩みを感じたとき、一人で抱え込まずに本音でSOSを出せる「サードプレイス（逃げ道となる人や場所）」を持っている？' },
+            c1: { area: 'C', q: '自宅や職場周辺で大雨や大地震の避難指示が出たとき、「どこへ・どのルートで逃げるか」を具体的にイメージできている？' },
+            a2: { area: 'A', q: '万が一、今の収入が突然途絶えたときのための「緊急用の貯金（生活費の数ヶ月分）」を、普段使う口座とは分けて確保している？' },
+            a3: { area: 'A', q: '資格の勉強、読書、情報収集など、将来の収入増やキャリアアップにつながる具体的な「自己投資」の行動を日頃からしている？' },
+            a4: { area: 'A', q: 'SNSの「スキマ時間で高収入」といった副業や、知人からのうまい儲け話に対して、即座に裏付けを取る（またはキッパリ断る）ことができている？' },
+            a5: { area: 'A', q: '自転車事故や他人のモノを壊してしまった時など、日常の賠償リスクへの対処法（個人賠償責任保険等）は決まっている？' },
+            b2: { area: 'B', q: '病気やケガで長期間動けなくなった場合の、サポート体制（家族や公的制度の知識）は整っている？' },
+            b3: { area: 'B', q: '定期的な健康診断を受診し、体調不良時にすぐ相談できる「かかりつけ医」はいる？' },
+            b4: { area: 'B', q: '職場でのハラスメントや、悪質なネット通販・ネット詐欺トラブルに巻き込まれた際、「どこに相談すべきか（労働基準監督署・188番等）」を知っている？' },
+            b5: { area: 'B', q: 'SNSの誹謗中傷や情報過多で心が疲れた際、意図的にスマホから離れる「デジタルデトックス」のマイルールはある？' },
+            c2: { area: 'C', q: '防災リュックの中身や、備蓄している水・食料などは、半年に1回以上「期限の確認や入れ替え（ローリングストック）」を行っている？' },
+            c3: { area: 'C', q: '災害時にLINEや電話が繋がらない場合に備え、家族や大切な人と「安否確認の方法（災害用伝言ダイヤルなど）や集合場所」を話し合って決めている？' },
+            c4: { area: 'C', q: 'スマホの紛失や突然の故障、アカウント乗っ取りに備え、大切な写真やパスワードの「クラウド保存（バックアップ）」の設定を済ませている？' },
+            c5: { area: 'C', q: '複数のアプリで同じパスワードを使い回さず、重要なアカウントには「二段階認証」を設定するなど、定期的にセキュリティを見直している？' }
+        };
+
+        // 共通の3問 → Q4（分岐）→ 選んだ不安のジャンルから順に残り12問
+        const COMMON_IDS = ['a1', 'b1', 'c1'];
+        const FOLLOW_IDS = { A: ['a2', 'a3', 'a4', 'a5'], B: ['b2', 'b3', 'b4', 'b5'], C: ['c2', 'c3', 'c4', 'c5'] };
+        const BRANCH_Q = '今、あなたが一番「もし起きたらどうしよう…」とリアルに不安を感じるトラブルはどれですか？';
+        // 並び順は GAS の CONCERNS と同じにすること
+        const CONCERN_OPTIONS = [
+            { text: '収入減・キャリアの行き詰まりなど、お金・仕事の不安', order: ['A', 'B', 'C'] },
+            { text: 'SNSトラブル・メンタル不調など、情報・心身の不安',     order: ['B', 'A', 'C'] },
+            { text: '大地震・インフラ停止など、環境・災害の不安',           order: ['C', 'A', 'B'] }
+        ];
+        const ATTR_COUNT = 2;
+        const QUESTION_COUNT = 16;
+
+        // ==========================
+        // 状態
+        // ==========================
+        const state = { consentedAt: '', answers: {}, step: 0, busy: false };
+        let steps = buildSteps();
+
+        const chat     = document.getElementById('chat');
+        const intro    = document.getElementById('intro');
+        const dock     = document.getElementById('dock');
+        const counter  = document.getElementById('counter');
+        const progress = document.getElementById('progress');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function buildSteps() {
+            const list = [
+                { kind: 'attr', key: 'age_band', text: 'あなたの年代を教えてください。', options: AGE_BANDS, cols: 2 },
+                { kind: 'attr', key: 'gender',   text: '性別を教えてください。',         options: GENDERS,   cols: 3 }
+            ];
+            COMMON_IDS.forEach(id => list.push({ kind: 'q', key: id }));
+            list.push({ kind: 'branch', key: 'concern' });
+            const concern = CONCERN_OPTIONS[state.answers.concern] || CONCERN_OPTIONS[0];
+            concern.order.forEach(t => FOLLOW_IDS[t].forEach(id => list.push({ kind: 'q', key: id })));
+            return list;
+        }
+
+        // ==========================
+        // 表示の部品
+        // ==========================
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function scrollToEnd() {
+            requestAnimationFrame(() => window.scrollTo({
+                top: document.documentElement.scrollHeight,
+                behavior: reduceMotion ? 'auto' : 'smooth'
+            }));
+        }
+
+        function addAi(html, animate = true) {
+            const row = document.createElement('div');
+            row.className = 'msg' + (animate ? ' anim' : '');
+            row.innerHTML = `<svg class="avatar" aria-hidden="true"><use href="#emblem"/></svg><div class="bubble">${html}</div>`;
+            chat.appendChild(row);
+            if (animate) scrollToEnd();
+            return row;
+        }
+
+        function addUser(text, animate = true) {
+            const row = document.createElement('div');
+            row.className = 'msg msg-user' + (animate ? ' anim' : '');
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = text;
+            row.appendChild(bubble);
+            chat.appendChild(row);
+            if (animate) scrollToEnd();
+        }
+
+        function showTyping() {
+            return addAi('<span class="typing" aria-label="入力中"><span></span><span></span><span></span></span>');
+        }
+
+        async function typing(ms) {
+            const row = showTyping();
+            await sleep(ms);
+            row.remove();
+        }
+
+        function clearDock() { dock.innerHTML = ''; }
+
+        function setProgress(ratio, label) {
+            progress.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+            counter.textContent = label;
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.classList.add('show');
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(() => t.classList.remove('show'), 2400);
+        }
+
+        // ==========================
+        // 設問の表示
+        // ==========================
+        function questionNo(i) { return i - ATTR_COUNT + 1; }
+
+        function optionLabels(s) {
+            if (s.kind === 'attr') return s.options;
+            if (s.kind === 'branch') return CONCERN_OPTIONS.map(o => o.text);
+            return YES_NO;
+        }
+
+        // 年代・性別は文字列で、Q4と各設問は選択肢の番号（0:はい／1:少し不安／2:いいえ）で保持する
+        function optionValue(s, idx) { return s.kind === 'attr' ? s.options[idx] : idx; }
+
+        function answerLabel(i) {
+            const s = steps[i];
+            const v = state.answers[s.key];
+            return s.kind === 'attr' ? v : optionLabels(s)[v];
+        }
+
+        function questionHtml(i) {
+            const s = steps[i];
+            if (s.kind === 'attr') {
+                return `<div class="q-meta"><span class="tag tag-n">あなたについて ${i + 1} / ${ATTR_COUNT}</span></div>`
+                     + `<p class="q-text">${s.text}</p>`;
+            }
+            if (s.kind === 'branch') {
+                return `<div class="q-meta"><span class="q-no">Q${questionNo(i)}</span><span class="tag tag-n">あなたの関心</span></div>`
+                     + `<p class="q-text">${BRANCH_Q}</p>`;
+            }
+            const q = QUESTIONS[s.key];
+            return `<div class="q-meta"><span class="q-no">Q${questionNo(i)}</span><span class="tag tag-${q.area.toLowerCase()}">${AREA[q.area].short}</span></div>`
+                 + `<p class="q-text">${q.q}</p>`;
+        }
+
+        // その設問の直前に入る案内メッセージ
+        function leadMessages(i) {
+            if (i === 0) {
+                return ['ありがとうございます！はじめに、あなたについて<strong>2つだけ</strong>教えてください。<br><span class="note">結果を見るときの参考に伺うもので、診断の採点には影響しません。</span>'];
+            }
+            if (i === ATTR_COUNT) {
+                return ['ありがとうございます。それでは診断をスタートします！<br><span class="note">直感で「はい」「少し不安」「いいえ」を選んでください。</span>'];
+            }
+            if (steps[i - 1] && steps[i - 1].kind === 'branch') {
+                const first = AREA[CONCERN_OPTIONS[state.answers.concern].order[0]].short;
+                return [
+                    `回答ありがとうございます。<br>いま一番気になっている<strong>「${first}」</strong>の分野から深掘りできるよう、質問の順番を調整しています…`,
+                    '調整が完了しました。それでは、診断を再開します！'
+                ];
+            }
+            return [];
+        }
+
+        function updateProgress(i) {
+            const label = steps[i].kind === 'attr' ? 'はじめに' : `Q ${questionNo(i)} / ${QUESTION_COUNT}`;
+            setProgress(i / steps.length, label);
+        }
+
+        async function ask(i, instant = false) {
+            state.busy = true;
+            clearDock();
+            updateProgress(i);
+            const leads = leadMessages(i);
+            for (let k = 0; k < leads.length; k++) {
+                if (!instant) await typing(k === 0 && leads.length > 1 ? 1100 : 650);
+                addAi(leads[k], !instant);
+            }
+            await typing(instant ? 300 : 650);
+            addAi(questionHtml(i));
+            renderChoices(i);
+            state.busy = false;
+        }
+
+        function renderChoices(i) {
+            const s = steps[i];
+            const labels = optionLabels(s);
+            const cols = s.kind === 'attr' ? s.cols : (s.kind === 'branch' ? 1 : 3);
+            const prev = state.answers[s.key];
+
+            const wrap = document.createElement('div');
+            wrap.className = 'choices choices-' + cols;
+            wrap.setAttribute('role', 'group');
+            wrap.setAttribute('aria-label', '回答を選択');
+            labels.forEach((label, idx) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'choice';
+                b.textContent = label;
+                const value = optionValue(s, idx);
+                if (prev === value) b.classList.add('is-prev');
+                b.addEventListener('click', () => choose(i, value, label));
+                wrap.appendChild(b);
+            });
+            dock.appendChild(wrap);
+
+            if (i > 0) {
+                const back = document.createElement('button');
+                back.type = 'button';
+                back.className = 'btn-back';
+                back.textContent = '← 1つ前の質問に戻る';
+                back.addEventListener('click', goBack);
+                dock.appendChild(back);
+            }
+            scrollToEnd();
+        }
+
+        async function choose(i, value, label) {
+            if (state.busy) return;
+            state.busy = true;
+            clearDock();
+            state.answers[steps[i].key] = value;
+            addUser(label);
+            if (steps[i].kind === 'branch') steps = buildSteps();
+            state.step = i + 1;
+            await sleep(250);
+            if (state.step < steps.length) ask(state.step);
+            else finish();
+        }
+
+        function goBack() {
+            if (state.busy || state.step === 0) return;
+            state.step -= 1;
+            // 会話を「戻った先の質問の直前」まで描き直す
+            while (chat.lastElementChild !== intro) chat.lastElementChild.remove();
+            for (let i = 0; i < state.step; i++) {
+                leadMessages(i).forEach(m => addAi(m, false));
+                addAi(questionHtml(i), false);
+                addUser(answerLabel(i), false);
+            }
+            ask(state.step, true);
+        }
+
+        // ==========================
+        // 同意 → 開始
+        // ==========================
+        document.getElementById('consentCheck').addEventListener('change', e => {
+            document.getElementById('startBtn').disabled = !e.target.checked;
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (state.busy || !document.getElementById('consentCheck').checked) return;
+            state.consentedAt = new Date().toISOString();
+            document.getElementById('consent').outerHTML =
+                '<div class="consent-done"><svg aria-hidden="true"><use href="#i-check"/></svg>回答の取り扱いに同意済み</div>';
+            ask(0);
+        });
+
+        // ==========================
+        // 送信と結果（判定はサーバー側で行います）
+        // ==========================
+        function getSessionId() {
+            try {
+                let sid = localStorage.getItem('ra_sid');
+                if (!sid) {
+                    sid = (window.crypto && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : 'sid-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+                    localStorage.setItem('ra_sid', sid);
+                }
+                return sid;
+            } catch (e) {
+                // iframe埋め込みやプライベートモードでストレージが使えない場合
+                return 'nostore-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+            }
+        }
+
+        function buildPayload() {
+            const q = new URLSearchParams(location.search);
+            let ref = '';
+            try { ref = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) { ref = ''; }
+
+            const answers = {};
+            Object.keys(QUESTIONS).forEach(id => { answers[id] = state.answers[id]; });
+            const started = Date.parse(state.consentedAt);
+
+            return {
+                token:          CONFIG.token,
+                appVersion:     CONFIG.appVersion,
+                consentVersion: CONFIG.consentVersion,
+                consentedAt:    state.consentedAt,
+                sessionId:      getSessionId(),
+                staff:          q.get('staff') || '',
+                source:         q.get('src') || ref || 'direct',
+                data: {
+                    age_band:    state.answers.age_band,
+                    gender:      state.answers.gender,
+                    concern:     state.answers.concern,
+                    answers:     answers,
+                    durationSec: Number.isFinite(started) ? Math.round((Date.now() - started) / 1000) : ''
+                }
+            };
+        }
+
+        async function finish() {
+            state.busy = true;
+            clearDock();
+            setProgress(1, '分析中…');
+            await typing(600);
+            addAi('すべての質問が完了しました！<br>回答データを分析しています…');
+            submit();
+        }
+
+        async function submit() {
+            state.busy = true;
+            clearDock();
+            const oldError = document.getElementById('error-row');
+            if (oldError) oldError.remove();
+
+            const indicator = showTyping();
+            const startedAt = Date.now();
+            const ctrl = window.AbortController ? new AbortController() : null;
+            const timer = ctrl ? setTimeout(() => ctrl.abort(), 25000) : 0;
+
+            try {
+                if (!CONFIG.endpoint) throw new Error('送信先（CONFIG.endpoint）が設定されていません');
+                const res = await fetch(CONFIG.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(buildPayload()),
+                    signal: ctrl ? ctrl.signal : undefined
+                });
+                const json = await res.json();
+                if (!json || !json.ok) throw new Error((json && json.error) ? json.error : '不明なエラー');
+                // 最低1.8秒は「分析している」演出を見せる
+                await sleep(Math.max(0, 1800 - (Date.now() - startedAt)));
+                indicator.remove();
+                renderResult(json.result);
+            } catch (err) {
+                indicator.remove();
+                renderError(err && err.name === 'AbortError' ? new Error('通信がタイムアウトしました') : err);
+            } finally {
+                clearTimeout(timer);
+                state.busy = false;
+            }
+        }
+
+        function renderError(err) {
+            setProgress(1, '送信エラー');
+            const row = addAi(
+                '<div class="err">申し訳ございません。診断結果の取得に失敗しました。<br>通信環境をご確認のうえ、もう一度お試しください。'
+                + `<small>(${esc((err && err.message) || err)})</small></div>`
+            );
+            row.id = 'error-row';
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'btn-primary';
+            retry.textContent = 'もう一度送信する';
+            retry.addEventListener('click', submit);
+            dock.appendChild(retry);
+            scrollToEnd();
+        }
+
+        // ==========================
+        // 回答の控え（PDFに載せる）
+        // ==========================
+        const ATTR_LABEL = { age_band: '年代', gender: '性別' };
+
+        function currentStaff() {
+            try { return (new URLSearchParams(location.search).get('staff') || '').trim().slice(0, 40); }
+            catch (e) { return ''; }
+        }
+
+        function todayLabel() {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate());
+        }
+
+        function answersDumpHtml() {
+            const rows = steps.map((s, i) => {
+                const ans = answerLabel(i);
+                if (s.kind === 'attr') {
+                    return `<tr><td class="c-no">—</td><td class="c-area">${esc(ATTR_LABEL[s.key] || '')}</td>`
+                         + `<td>${esc(s.text)}</td><td class="c-ans">${esc(ans)}</td></tr>`;
+                }
+                if (s.kind === 'branch') {
+                    return `<tr><td class="c-no">Q${questionNo(i)}</td><td class="c-area">あなたの関心</td>`
+                         + `<td>${esc(BRANCH_Q)}</td><td class="c-ans">${esc(ans)}</td></tr>`;
+                }
+                const q = QUESTIONS[s.key];
+                return `<tr><td class="c-no">Q${questionNo(i)}</td><td class="c-area">${esc(AREA[q.area].short)}</td>`
+                     + `<td>${esc(q.q)}</td><td class="c-ans">${esc(ans)}</td></tr>`;
+            }).join('');
+
+            return `
+                <details class="answers-dump">
+                    <summary>回答の控えを見る（PDFにも載ります）</summary>
+                    <table class="dump-table">
+                        <thead><tr><th>No.</th><th>ジャンル</th><th>設問</th><th>回答</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <p class="dump-note">「はい」＝2点／「少し不安」＝1点／「いいえ」＝0点で採点しています。年代・性別は採点に含みません。</p>
+                </details>`;
+        }
+
+        function consentStamp() {
+            const d = state.consentedAt ? new Date(state.consentedAt) : null;
+            if (!d || isNaN(d.getTime())) return '';
+            const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        function consentStampHtml() {
+            const t = consentStamp();
+            if (!t) return '';
+            return '<p class="consent-stamp">ご本人が回答の取り扱いをご確認のうえ、診断の実施と結果のPDF保存に同意されました。'
+                 + `（同意日時 <b>${esc(t)}</b>　／　同意文の版 ${esc(CONFIG.consentVersion)}）</p>`;
+        }
+
+        function printResult() {
+            const d = document.querySelector('.answers-dump');
+            if (d) d.open = true;
+            setTimeout(() => window.print(), 60);
+        }
+
+        window.addEventListener('beforeprint', () => {
+            const d = document.querySelector('.answers-dump');
+            if (d) { d.dataset.wasOpen = d.open ? '1' : ''; d.open = true; }
+        });
+        window.addEventListener('afterprint', () => {
+            const d = document.querySelector('.answers-dump');
+            if (d && !d.dataset.wasOpen) d.open = false;
+        });
+
+        function renderResult(r) {
+            setProgress(1, '診断完了');
+            addAi('お待たせしました。あなたの診断結果はこちらです！');
+
+            const image = `result_${String(r.rank).toLowerCase()}_${String(r.weakType).toLowerCase()}.png`;
+            const m = String(r.typeName).match(/^【(.+?)】\s*(.+)$/);
+            const kicker = m ? m[1] : '';
+            const name = m ? m[2] : r.typeName;
+
+            const meters = ['A', 'B', 'C'].map(t => {
+                const v = Number(r['score' + t]) || 0;
+                const weak = t === r.weakType;
+                return `
+                    <div class="meter meter-${t.toLowerCase()}${weak ? ' is-weak' : ''}">
+                        <div class="meter-head">
+                            <svg aria-hidden="true"><use href="#${AREA[t].icon}"/></svg>
+                            <span class="meter-name">${AREA[t].short}</span>
+                            ${weak ? '<span class="weak-tag">最大の弱点</span>' : ''}
+                            <span class="meter-val">${v}<small> / 10</small></span>
+                        </div>
+                        <div class="meter-track"><i data-w="${v * 10}"></i></div>
+                    </div>`;
+            }).join('');
+
+            const section = document.createElement('section');
+            section.className = 'result anim';
+            section.setAttribute('aria-label', '診断結果');
+            const staff = currentStaff();
+            section.innerHTML = `
+                <div class="result-meta">
+                    <span class="print-title">危機管理アセスメント　診断結果</span>
+                    <span>実施日 <b>${esc(todayLabel())}</b>${staff ? `　／　担当 <b>${esc(staff)}</b>` : ''}</span>
+                </div>
+                <div class="medal"><img src="${esc(image)}" alt="${esc(r.typeName)}のイラスト"></div>
+                ${kicker ? `<span class="type-kicker">${esc(kicker)}</span>` : ''}
+                <h2 class="type-name">${esc(name)}</h2>
+
+                <div class="score">
+                    <div class="score-top">
+                        <div>
+                            <div class="score-label">あなたの危機管理スコア</div>
+                            <div class="score-num"><span id="scoreNum">0</span><small>/ 100点</small></div>
+                        </div>
+                        <div class="seal seal-${esc(r.rank)}" aria-label="ランク ${esc(r.rank)}"><span>RANK</span><b>${esc(r.rank)}</b></div>
+                    </div>
+                    <div class="score-bar"><i data-w="${Number(r.score100) || 0}"></i></div>
+                    <p class="rank-name">${esc(r.rankName)}</p>
+                </div>
+
+                <div class="section">
+                    <h3>ジャンル別の防衛力</h3>
+                    <div class="panel meters">${meters}</div>
+                </div>
+
+                <div class="section">
+                    <h3>これからのアドバイス</h3>
+                    <div class="panel"><p>${esc(r.msg)}</p></div>
+                </div>
+
+                <div class="section">
+                    <h3>なぜこの動物？</h3>
+                    <div class="panel panel-quiet"><p>${esc(r.concept)}</p></div>
+                </div>
+
+                <div class="magic">
+                    <h3>プロに聞く「魔法の質問」</h3>
+                    <p class="note">ご相談のときに、そのまま担当者へ送ってみてください。</p>
+                    <blockquote>「${esc(r.magicQ)}」</blockquote>
+                    <button type="button" class="btn-copy"><svg aria-hidden="true"><use href="#i-copy"/></svg>質問をコピーする</button>
+                </div>
+
+                ${answersDumpHtml()}
+                ${consentStampHtml()}
+
+                <div class="result-actions">
+                    <button type="button" class="btn-pdf">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 9V3h12v6"/><path d="M6 18H4v-6h16v6h-2"/>
+                            <rect x="6" y="14" width="12" height="7" rx="1"/>
+                        </svg>結果をPDFで保存する
+                    </button>
+                    <button type="button" class="btn-restart">最初からやり直す</button>
+                </div>`;
+
+            section.querySelector('.medal img').addEventListener('error', e => { e.target.parentNode.remove(); });
+            section.querySelector('.btn-copy').addEventListener('click', async () => {
+                showToast(await copyText(r.magicQ) ? 'コピーしました' : 'コピーできませんでした');
+            });
+            section.querySelector('.btn-restart').addEventListener('click', () => location.reload());
+            section.querySelector('.btn-pdf').addEventListener('click', printResult);
+
+            chat.appendChild(section);
+            requestAnimationFrame(() => {
+                section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+                setTimeout(() => {
+                    section.querySelectorAll('[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; });
+                    countUp(document.getElementById('scoreNum'), Number(r.score100) || 0);
+                }, reduceMotion ? 0 : 350);
+            });
+        }
+
+        function countUp(el, to) {
+            if (reduceMotion) { el.textContent = to; return; }
+            const start = performance.now();
+            const dur = 1000;
+            const tick = now => {
+                const p = Math.min(1, (now - start) / dur);
+                el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+                if (p < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                let ok = false;
+                try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+                ta.remove();
+                return ok;
+            }
+        }
+    </script>
+</body>
+</html>

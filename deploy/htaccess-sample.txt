@@ -1,0 +1,60 @@
+#############################################################
+# 診断ページ用 .htaccess サンプル
+#
+# 置き場所 : 診断ページを入れたディレクトリ（例 /cf/）の直下
+# ファイル名: .htaccess  （先頭のドットを忘れないこと）
+#############################################################
+
+# ---------- Basic認証（社員だけがアクセスできるようにする） ----------
+AuthType Basic
+AuthName "Staff Only"
+
+# ★ .htpasswd の「サーバー上の絶対パス」に書き換える。
+#    エックスサーバーなら /home/【サーバーID】/【ドメイン】/public_html/cf/.htpasswd
+#    さくらなら /home/【アカウント】/www/cf/.htpasswd
+#    ※ 絶対パスが分からない場合は、サーバーのコントロールパネルにある
+#      「アクセス制限」機能を使えば .htaccess を自分で書かずに設定できます。
+AuthUserFile /home/【サーバーID】/【ドメイン】/public_html/cf/.htpasswd
+
+Require valid-user
+
+
+# ---------- WordPress のリライトから除外する ----------
+# WordPress はルートの .htaccess で「存在しないファイルへのアクセス」を
+# index.php に飛ばします。実ファイルがあれば対象外なので通常は問題ありませんが、
+# 念のためこのディレクトリではリライトを止めておきます。
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule>
+
+
+# ---------- HTML をキャッシュさせない ----------
+# 診断ページを更新したとき、社員のブラウザに古い版が残らないようにします。
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+    </FilesMatch>
+</IfModule>
+
+
+# ---------- .htpasswd 自体を見られないようにする ----------
+<Files ".htpasswd">
+    Require all denied
+</Files>
+
+
+#############################################################
+# .htpasswd の作り方
+#
+# 【推奨】サーバーのコントロールパネルの「アクセス制限 / ディレクトリ制限」
+#         機能を使う。ユーザー名とパスワードを入れるだけで生成されます。
+#
+# 【手動で作る場合】
+#   https://www.web2generators.com/apache-tools/htpasswd-generator
+#   のようなツールで「ユーザー名:暗号化されたパスワード」の1行を作り、
+#   .htpasswd という名前のファイルに保存してアップロードします。
+#   例）staff:$apr1$xxxxxxxx$yyyyyyyyyyyyyyyyyyyyy
+#
+#   ※ 平文のパスワードをそのまま書いても動きません（暗号化が必要）。
+#############################################################
