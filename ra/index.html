@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f5f0e4">
     <meta name="description" content="16の質問で、お金・健康・災害の3つのジャンルから日常のリスクへの防衛力を診断します。">
-    <title>AI 危機管理アセスメント</title>
+    <title>危機管理アセスメント</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -386,15 +386,27 @@
         }
 
         /* ===== ポータル同梱で追加 ===== */
+        /* ポータルへ戻る（3ツール共通の形） */
+        /* 他の2つと同じく、画面の左上に固定する（本文の列ではなくヘッダー基準） */
+        .topbar { position: relative; }
         .to-portal {
-            flex: none; display: inline-flex; align-items: center; gap: 4px;
-            font-size: .72rem; font-weight: 700; color: var(--muted);
-            text-decoration: none; padding: 5px 10px; border-radius: 999px;
+            position: absolute; left: 12px; top: 16px;
+            display: inline-flex; align-items: center; gap: 5px;
+            height: 30px; padding: 0 12px; border-radius: 999px;
+            font-size: .74rem; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
+            text-decoration: none; color: var(--muted);
             border: 1px solid var(--line); background: var(--card);
         }
         .to-portal:hover { color: var(--ink); border-color: var(--gold-line); }
         .to-portal:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-        .to-portal svg { width: 13px; height: 13px; }
+        .to-portal svg { width: 14px; height: 14px; flex: none; }
+        /* 本文の列が左に寄ってボタンと重なる幅だけ、内側に余白を足す */
+        @media (max-width: 920px) { .topbar-inner { padding-left: 116px; } }
+        @media (max-width: 560px) {
+            .topbar-inner { padding-left: 50px; }
+            .to-portal { padding: 0; width: 30px; justify-content: center; }
+            .to-portal .label { display: none; }
+        }
 
         .result-meta {
             display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline;
@@ -457,7 +469,7 @@
                 background: #fff !important;
                 -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
-            .topbar, .dock, #toast, .msg, .result-actions, .magic .note, .btn-copy { display: none !important; }
+            .topbar, .dock, #toast, .msg, .result-actions { display: none !important; }
             main { padding: 0 !important; max-width: none !important; }
             .result {
                 border: 0 !important; box-shadow: none !important;
@@ -515,20 +527,20 @@
 
     <header class="topbar">
         <div class="topbar-inner">
+            <a class="to-portal" href="../" title="ポータルへ戻る">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>
+                </svg><span class="label">ポータル</span>
+            </a>
             <div class="brand">
                 <svg class="emblem" aria-hidden="true"><use href="#emblem"/></svg>
                 <div>
                     <small>RISK ASSESSMENT</small>
-                    <h1>AI 危機管理アセスメント</h1>
+                    <h1>危機管理アセスメント</h1>
                 </div>
             </div>
             <div class="counter" id="counter">はじめに</div>
-            <a class="to-portal" href="../">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>
-                </svg>ポータル
-            </a>
         </div>
         <div class="progress"><i id="progress"></i></div>
     </header>
@@ -596,7 +608,7 @@
         // 設定
         // ==========================
         const CONFIG = {
-            appVersion:     'v3.0.0',
+            appVersion:     'v3.1.0',
             consentVersion: '2026-10-08'
         };
 
@@ -1045,22 +1057,6 @@
         // ==========================
         // 送信と結果（判定はサーバー側で行います）
         // ==========================
-        // （記録を再開するときのために残しています。いまは使っていません）
-        function getSessionId() {
-            try {
-                let sid = localStorage.getItem('ra_sid');
-                if (!sid) {
-                    sid = (window.crypto && crypto.randomUUID)
-                        ? crypto.randomUUID()
-                        : 'sid-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-                    localStorage.setItem('ra_sid', sid);
-                }
-                return sid;
-            } catch (e) {
-                // iframe埋め込みやプライベートモードでストレージが使えない場合
-                return 'nostore-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-            }
-        }
 
         function buildData() {
             const answers = {};
@@ -1265,9 +1261,8 @@
 
                 <div class="magic">
                     <h3>プロに聞く「魔法の質問」</h3>
-                    <p class="note">ご相談のときに、そのまま担当者へ送ってみてください。</p>
+                    <p class="note">この結果をもとに、いま担当者へ聞いてみてください。</p>
                     <blockquote>「${esc(r.magicQ)}」</blockquote>
-                    <button type="button" class="btn-copy"><svg aria-hidden="true"><use href="#i-copy"/></svg>質問をコピーする</button>
                 </div>
 
                 ${answersDumpHtml()}
@@ -1285,9 +1280,6 @@
                 </div>`;
 
             section.querySelector('.medal img').addEventListener('error', e => { e.target.parentNode.remove(); });
-            section.querySelector('.btn-copy').addEventListener('click', async () => {
-                showToast(await copyText(r.magicQ) ? 'コピーしました' : 'コピーできませんでした');
-            });
             section.querySelector('.btn-restart').addEventListener('click', () => location.reload());
             section.querySelector('.btn-pdf').addEventListener('click', printResult);
 

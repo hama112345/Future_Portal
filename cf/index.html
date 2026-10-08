@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>金融コンサルティング専用 キャッシュフロー診断</title>
+    <title>キャッシュフロー診断</title>
     <meta name="robots" content="noindex, nofollow">
     <style>
         :root {
@@ -378,27 +378,60 @@
         .cf-row .indent { padding-left: 12px; color: var(--text-muted); font-weight: 600;}
         
         @media print {
-            body { background: white; overflow: visible; height: auto; }
-            header, .chat-messages .message-row:not(:last-child), .submit-btn, .edit-btn, .add-btn, .remove-btn { display: none; }
-            .cf-sheet { display: block !important; border: none; margin-top: 0; }
-            .chat-container { box-shadow: none; max-width: 100%; border: none; overflow: visible; background: none;}
-            .chat-messages { overflow: visible; }
-            #result-row .result-card { display: none; } 
+            /* 画面は高さ固定でスクロールさせているので、印刷では全部を縦に流す */
+            body {
+                background: white !important; display: block !important;
+                height: auto !important; overflow: visible !important;
+            }
+            main {
+                display: block !important; height: auto !important;
+                overflow: visible !important; padding: 0 !important;
+            }
+            header, .chat-messages .message-row:not(:last-child),
+            .submit-btn, .edit-btn, .add-btn, .remove-btn,
+            .sheet-btn, .pdf-btn, .pre-result, .ai-avatar { display: none !important; }
+            .cf-sheet { display: block !important; border: none; margin-top: 18px; }
+            .chat-container {
+                box-shadow: none !important; max-width: 100% !important; border: none !important;
+                display: block !important; height: auto !important;
+                overflow: visible !important; background: none !important;
+                backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+            }
+            .chat-messages {
+                display: block !important; overflow: visible !important;
+                height: auto !important; max-height: none !important; padding: 0 !important;
+            }
+            .message-row { display: block !important; }
+            .ai-bubble {
+                max-width: 100% !important; width: 100% !important;
+                border: none !important; box-shadow: none !important;
+                padding: 0 !important; background: none !important;
+            }
+            .result-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            .cf-meta { justify-content: space-between; border-bottom: 1px solid #cbd5e1; padding-bottom: 7px; }
+            .indicator-grid { break-inside: avoid; }
         }
 
         /* ===== ポータル同梱で追加 ===== */
-        header { padding-left: 46px; padding-right: 46px; }
+        /* ポータルへ戻る（3ツール共通の形） */
+        header { padding-left: 116px; padding-right: 116px; }
         .to-portal {
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            width: 30px; height: 30px; border-radius: 50%;
-            display: inline-grid; place-items: center;
-            color: var(--text-muted); text-decoration: none;
+            position: absolute; left: 12px; top: 16px;
+            display: inline-flex; align-items: center; gap: 5px;
+            height: 30px; padding: 0 12px; border-radius: 999px;
+            font-size: .74rem; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
+            text-decoration: none; color: var(--text-muted);
             background: rgba(255,255,255,.8);
             border: 1px solid rgba(148,163,184,.45);
         }
         .to-portal:hover { color: var(--accent); border-color: var(--accent); }
         .to-portal:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-        .to-portal svg { width: 15px; height: 15px; }
+        .to-portal svg { width: 14px; height: 14px; flex: none; }
+        @media (max-width: 560px) {
+            header { padding-left: 50px; padding-right: 50px; }
+            .to-portal { padding: 0; width: 30px; justify-content: center; }
+            .to-portal .label { display: none; }
+        }
 
         .cf-meta {
             display: flex; flex-wrap: wrap; gap: 4px 16px;
@@ -411,11 +444,27 @@
             background: rgba(241,245,249,.7); border: 1px dashed #cbd5e1; border-radius: 8px;
         }
         .cf-stamp b { color: var(--text-main); font-weight: 800; }
+        .cf-meta .print-title { display: none; }
+        .pre-result { display: block; margin-bottom: 14px; }
+        .pdf-btn {
+            margin-top: 10px; width: 100%; background: var(--accent); color: #fff;
+            border: none; padding: 13px; border-radius: 8px;
+            font-family: var(--font-family); font-size: .95rem; font-weight: 800; cursor: pointer;
+        }
+        .pdf-btn:hover { background: var(--accent-hover); }
+        .pdf-btn svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }
+        .sheet-btn {
+            margin-top: 14px; width: 100%; background: rgba(255,255,255,.85); color: var(--text-main);
+            border: 1px solid var(--accent); padding: 12px; border-radius: 8px;
+            font-family: var(--font-family); font-size: .92rem; font-weight: 700; cursor: pointer;
+        }
+        .sheet-btn:hover { background: #fff; }
 
         @media print {
             @page { margin: 12mm 10mm; }
             html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .to-portal { display: none !important; }
+            .cf-meta .print-title { display: block; font-size: .9rem; font-weight: 800; color: var(--primary); }
             .cf-row, .assumption-box { break-inside: avoid; }
         }
     </style>
@@ -427,10 +476,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>
-            </svg>
+            </svg><span class="label">ポータル</span>
         </a>
         <div class="header-text">
-            <h1>ライフプラン＆キャッシュフロー診断</h1>
+            <h1>キャッシュフロー診断</h1>
         </div>
         <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
     </header>
@@ -507,7 +556,7 @@
         // 設定（★導入時にここを書き換える）
         // ==========================
         const CONFIG = {
-            appVersion:     'v2.0.0',
+            appVersion:     'v2.1.0',
             consentVersion: '2026-10-08'
         };
 
@@ -1099,22 +1148,6 @@
             return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate());
         }
 
-        // （記録を再開するときのために残しています。いまは使っていません）
-        function getSessionId() {
-            try {
-                let sid = localStorage.getItem('cf_sid');
-                if (!sid) {
-                    sid = (window.crypto && crypto.randomUUID)
-                        ? crypto.randomUUID()
-                        : 'sid-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-                    localStorage.setItem('cf_sid', sid);
-                }
-                return sid;
-            } catch (e) {
-                // iframe埋め込みやプライベートモードでストレージが使えない場合
-                return 'nostore-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-            }
-        }
 
         // ==========================
         // Step 0: 同意
@@ -1709,11 +1742,6 @@
             const sheetHtml = `
                 <div class="cf-sheet" id="cfSheet">
                     <h3>キャッシュフロー・資産チェックシート</h3>
-                    <div class="cf-meta">
-                        <span>実施日 <b>${cfToday()}</b></span>
-                        ${cfStaff() ? `<span>担当 <b>${cfEsc(cfStaff())}</b></span>` : ''}
-                    </div>
-                    ${cfConsentStampHtml()}
 
                     <div class="cf-row sub-title"><span>【分析結果】</span></div>
                     <div class="cf-row total" style="color:var(--accent);"><span>【月間資産形成可能額】<br><span style="font-size:0.7rem; font-weight:normal;">① - ③</span></span><span>${yen(r.monthlySavings)} 円</span></div>
@@ -1776,8 +1804,12 @@
             <div class="message-row ai-row animate-fade" id="result-row">
                 ${AVATAR_HTML}
                 <div class="ai-bubble" style="width: 100%; max-width: 100%;">
-                    分析が完了しました！あなたの診断結果はこちらです。<br><br>
+                    <span class="pre-result">分析が完了しました！あなたの診断結果はこちらです。</span>
                     <div class="result-card">
+                        <div class="cf-meta">
+                            <span class="print-title">キャッシュフロー診断　診断結果</span>
+                            <span>実施日 <b>${cfToday()}</b>${cfStaff() ? `　／　担当 <b>${cfEsc(cfStaff())}</b>` : ''}</span>
+                        </div>
                         <div class="result-badge" style="background: ${r.badgeColor};">${r.typeName}</div>
                         <div class="result-message">${r.msg}</div>
 
@@ -1870,10 +1902,17 @@
                             </div>
                         </div>
 
-                        <button type="button" class="submit-btn" style="background:rgba(255,255,255,0.8); color:var(--text-main); border: 1px solid var(--accent);" onclick="document.getElementById('cfSheet').style.display='block';">📊 詳細シートを表示する</button>
-                        <button type="button" class="submit-btn" style="margin-top:8px;" onclick="printCfSheet()">🖨️ 結果と回答の控えをPDFで保存</button>
+                        <button type="button" class="sheet-btn" onclick="document.getElementById('cfSheet').style.display='block';">詳細シートを表示する</button>
+                        <button type="button" class="pdf-btn" onclick="printCfSheet()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M6 9V3h12v6"/><path d="M6 18H4v-6h16v6h-2"/>
+                                <rect x="6" y="14" width="12" height="7" rx="1"/>
+                            </svg>結果をPDFで保存する
+                        </button>
                     </div>
                     ${sheetHtml}
+                    ${cfConsentStampHtml()}
                 </div>
             </div>`;
 

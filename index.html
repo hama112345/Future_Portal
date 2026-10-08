@@ -203,8 +203,8 @@ footer{
                    placeholder="例：浜西" aria-describedby="staffNote">
         </div>
         <p class="staff-note" id="staffNote">
-            この端末にだけ記憶され、次に開いたときも入っています。<br>
-            入れた名前は診断結果のPDFの右上に印字されます（空欄でも診断は使えます）。
+            入れた名前は診断結果のPDFの右上に印字されます（空欄でも診断は使えます）。<br>
+            <strong>この端末には保存しません。</strong>ポータルを開くたびに入力してください。
         </p>
     </section>
 
@@ -295,7 +295,7 @@ footer{
 
     <footer>
         <span>社内利用・公開前テスト版</span>
-        <span>portal v1.2.0 / ra v3.0.0 / cf v2.0.0 / lp v1.0.0</span>
+        <span>portal v1.3.0 / ra v3.1.0 / cf v2.1.0 / lp v2.0.0</span>
     </footer>
 
 </div>
@@ -304,26 +304,19 @@ footer{
 (function () {
     'use strict';
 
-    var KEY = 'fl_portal_staff';
+    // この端末には何も保存しません（localStorage は使っていません）。
+    // 入力した担当者名は、下のリンクに付けて次のページへ渡すだけです。
     var input = document.getElementById('staff');
     var note  = document.getElementById('staffNote');
     var links = { ra: document.getElementById('link-ra'), cf: document.getElementById('link-cf'),
                   lp: document.getElementById('link-lp') };
     var noteHtml = note.innerHTML;
 
-    function read() {
-        try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
-    }
-    function save(v) {
-        try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {}
-    }
-
-    // URLに ?staff= が付いていればそれを優先（担当者ごとのブックマーク用）
-    var fromUrl = '';
-    try { fromUrl = (new URLSearchParams(location.search).get('staff') || '').trim(); } catch (e) {}
-
-    input.value = fromUrl || read();
-    if (fromUrl) save(fromUrl);
+    // 担当者ごとのブックマーク用に、URLの ?staff= があれば最初から入れておく
+    try {
+        var fromUrl = (new URLSearchParams(location.search).get('staff') || '').trim();
+        if (fromUrl) input.value = fromUrl;
+    } catch (e) {}
 
     function syncLinks() {
         var v = input.value.trim().slice(0, 40);
@@ -332,13 +325,13 @@ footer{
         });
         if (v) {
             note.innerHTML = '<span class="staff-saved">' + '「' + v.replace(/[<>&]/g, '') + '」で診断に入ります。</span><br>'
-                + 'この端末にだけ記憶され、次に開いたときも入っています。診断結果のPDFの右上に印字されます。';
+                + '診断結果のPDFの右上に印字されます。この端末には保存しないので、次に開いたときは空欄です。';
         } else {
             note.innerHTML = noteHtml;
         }
     }
 
-    input.addEventListener('input', function () { save(input.value.trim().slice(0, 40)); syncLinks(); });
+    input.addEventListener('input', syncLinks);
     syncLinks();
 })();
 </script>
