@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="担当コンサルタント向け 診断ツールのポータル。危機管理アセスメントとキャッシュフロー診断に切り替えて使います。">
+<title>診断ツール ポータル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap">
+<style>
+:root{
+    color-scheme: light;
+    --ink:#1b2340;
+    --ink-2:#2d3961;
+    --text:#2a3047;
+    --muted:#6b7280;
+    --line:#e6e3dc;
+    --line-soft:#f0ede6;
+    --bg:#ffffff;
+    --panel:#faf9f5;
+    --gold:#b4871f;
+    --gold-deep:#8a6420;
+    --gold-soft:#f8f1dd;
+    --gold-line:#e8d9ae;
+    --blue:#2563eb;
+    --blue-deep:#1d4ed8;
+    --blue-soft:#eaf1fe;
+    --blue-line:#c3d8fb;
+    --ui:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic UI','Yu Gothic',Meiryo,system-ui,sans-serif;
+    --display:'Zen Maru Gothic','Hiragino Maru Gothic ProN',var(--ui);
+    --col:1060px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+    font-family:var(--ui);
+    color:var(--text);
+    background:var(--bg);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding:0 16px 56px;
+}
+.wrap{max-width:var(--col);margin:0 auto}
+
+/* ---------- header ---------- */
+header{padding:40px 0 26px;text-align:center}
+.emblem{width:44px;height:44px;margin:0 auto 14px;display:block;color:var(--gold)}
+h1{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:clamp(1.45rem,4.6vw,2rem);
+    letter-spacing:.055em;
+    color:var(--ink);
+    margin:0 0 8px;
+}
+.sub{
+    margin:0;font-size:.82rem;letter-spacing:.14em;color:var(--gold-deep);
+    font-weight:700;
+}
+.rule{
+    width:70px;height:1px;margin:18px auto 0;
+    background:linear-gradient(90deg,transparent,var(--gold-line),transparent);
+}
+
+/* ---------- staff ---------- */
+.staff{
+    margin:30px 0 26px;padding:18px 18px 16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+}
+.staff-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:.78rem;font-weight:800;letter-spacing:.1em;color:var(--ink-2);
+    margin-bottom:10px;
+}
+.staff-label .step,.cards-label .step{
+    display:inline-grid;place-items:center;
+    width:19px;height:19px;border-radius:50%;
+    background:var(--gold);color:#fff;
+    font-size:.68rem;font-weight:900;letter-spacing:0;
+}
+.staff-input{display:flex;gap:8px;flex-wrap:wrap}
+.staff-input input{
+    flex:1 1 200px;min-width:0;
+    font-family:var(--ui);font-size:1rem;font-weight:700;color:var(--ink);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;
+    -webkit-appearance:none;
+}
+.staff-input input::placeholder{color:#a3a8b4;font-weight:500}
+.staff-input input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+.staff-note{margin:10px 0 0;font-size:.74rem;line-height:1.65;color:var(--muted)}
+.staff-saved{color:var(--gold-deep);font-weight:800}
+
+/* ---------- cards ---------- */
+.cards-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:.78rem;font-weight:800;letter-spacing:.1em;color:var(--ink-2);
+    margin:0 0 12px 2px;
+}
+.cards{display:grid;gap:14px}
+@media(min-width:900px){.cards{grid-template-columns:repeat(3,1fr);gap:16px}}
+
+.card{
+    position:relative;display:flex;flex-direction:column;
+    text-decoration:none;color:inherit;
+    padding:24px 20px 20px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 1px 0 rgba(27,35,64,.03);
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.card::before{
+    content:"";position:absolute;inset:0 0 auto;height:3px;
+    background:var(--tint);
+}
+.card:hover,.card:focus-visible{
+    transform:translateY(-3px);
+    border-color:var(--tint-line);
+    box-shadow:0 14px 30px -20px rgba(27,35,64,.45);
+    outline:none;
+}
+.card-ra{--tint:linear-gradient(90deg,var(--gold-deep),#d9b765,var(--gold-deep));--tint-line:var(--gold-line);--tint-ink:var(--gold-deep);--tint-soft:var(--gold-soft)}
+.card-cf{--tint:linear-gradient(90deg,var(--blue-deep),#7aa7f7,var(--blue-deep));--tint-line:var(--blue-line);--tint-ink:var(--blue-deep);--tint-soft:var(--blue-soft)}
+.card-lp{--tint:linear-gradient(90deg,#2b2f63,#6f74c4,#2b2f63);--tint-line:#c9cbe8;--tint-ink:#343a7d;--tint-soft:#eceef9}
+
+.card-icon{
+    width:42px;height:42px;margin-bottom:14px;padding:9px;
+    border-radius:12px;
+    color:var(--tint-ink);background:var(--tint-soft);
+}
+.card h2{
+    font-family:var(--display);font-weight:900;color:var(--ink);
+    font-size:1.12rem;letter-spacing:.03em;margin:0 0 8px;
+}
+.card p{margin:0 0 14px;font-size:.84rem;line-height:1.8;color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.chip{
+    font-size:.7rem;font-weight:700;letter-spacing:.02em;
+    padding:4px 9px;border-radius:999px;
+    background:var(--line-soft);
+    border:1px solid var(--line);
+    color:var(--muted);
+}
+.go{
+    margin-top:auto;display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding-top:14px;border-top:1px dashed var(--line);
+    font-size:.86rem;font-weight:900;letter-spacing:.04em;color:var(--tint-ink);
+}
+.go svg{width:17px;height:17px;flex:none;transition:transform .18s ease}
+.card:hover .go svg{transform:translateX(4px)}
+
+/* ---------- notice ---------- */
+.notice{
+    margin:28px 0 0;padding:16px 18px;
+    background:#fdf6f4;
+    border:1px solid #f0d9d3;
+    border-left:3px solid #c0604f;
+    border-radius:12px;
+}
+.notice h3{
+    margin:0 0 8px;font-size:.8rem;font-weight:900;letter-spacing:.06em;
+    color:#9b4436;
+}
+.notice ul{margin:0;padding-left:1.15em}
+.notice li{font-size:.77rem;line-height:1.85;color:var(--text)}
+.notice strong{color:#9b4436}
+
+footer{
+    margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;
+    font-size:.7rem;letter-spacing:.06em;color:#9aa0ab;
+}
+@media print{ body{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <svg class="emblem" viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M20 3.2 32.6 8v12.1c0 7.6-5.2 13.4-12.6 16.7C12.6 33.5 7.4 27.7 7.4 20.1V8L20 3.2Z"
+                  fill="none" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M14.4 20.4l4.2 4.3 7.4-8.2" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1>診断ツール ポータル</h1>
+        <p class="sub">担当コンサルタント用</p>
+        <div class="rule"></div>
+    </header>
+
+    <section class="staff" aria-labelledby="staffLabel">
+        <div class="staff-label" id="staffLabel"><span class="step">1</span>担当者名を入れる</div>
+        <div class="staff-input">
+            <input type="text" id="staff" autocomplete="off" spellcheck="false"
+                   placeholder="例：浜西" aria-describedby="staffNote">
+        </div>
+        <p class="staff-note" id="staffNote">
+            この端末にだけ記憶され、次に開いたときも入っています。<br>
+            入れた名前は診断結果のPDFの右上に印字されます（空欄でも診断は使えます）。
+        </p>
+    </section>
+
+    <div class="cards-label"><span class="step">2</span>使うツールを選ぶ</div>
+    <div class="cards">
+
+        <a class="card card-ra" id="link-ra" href="ra/">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2.6 20.5 6v6.3c0 4.9-3.5 9-8.5 11.1-5-2.1-8.5-6.2-8.5-11.1V6L12 2.6Z"/>
+                <path d="M12 8.4v4.1"/><path d="M12 16.2h.01"/>
+            </svg>
+            <h2>危機管理アセスメント</h2>
+            <p>お金・仕事／健康・メンタル／災害・デジタルの3ジャンルから、日常のリスクへの防衛力を測ります。結果は12タイプの動物で返ります。</p>
+            <div class="chips">
+                <span class="chip">16問</span>
+                <span class="chip">約3分</span>
+                <span class="chip">個人のお客様向け</span>
+                <span class="chip">PDF保存あり</span>
+            </div>
+            <span class="go">診断をはじめる
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                </svg>
+            </span>
+        </a>
+
+        <a class="card card-cf" id="link-cf" href="cf/">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3.5 19.5h17"/>
+                <path d="M3.5 15.4 8.6 10l3.6 3.2 4.1-5.1 4.2 3.4"/>
+                <circle cx="8.6" cy="10" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="12.2" cy="13.2" r="1.1" fill="currentColor" stroke="none"/>
+                <circle cx="16.3" cy="8.1" r="1.1" fill="currentColor" stroke="none"/>
+            </svg>
+            <h2>キャッシュフロー診断</h2>
+            <p>収入・支出・資産・負債から、家計の「貯める力・守る力・働かせる力・自由になる力」を試算します。算定根拠つきの詳細シートが出ます。</p>
+            <div class="chips">
+                <span class="chip">約10分</span>
+                <span class="chip">金額の入力あり</span>
+                <span class="chip">個人のお客様向け</span>
+                <span class="chip">PDF保存あり</span>
+            </div>
+            <span class="go">診断をはじめる
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                </svg>
+            </span>
+        </a>
+
+        <a class="card card-lp" id="link-lp" href="lp/">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3.2" y="3.2" width="7.6" height="7.6" rx="1.6"/>
+                <rect x="13.2" y="3.2" width="7.6" height="7.6" rx="1.6"/>
+                <rect x="3.2" y="13.2" width="7.6" height="7.6" rx="1.6"/>
+                <rect x="13.2" y="13.2" width="7.6" height="7.6" rx="1.6" fill="currentColor" stroke="none"/>
+            </svg>
+            <h2>資産形成＆ライフプラン診断</h2>
+            <p>13問で、お金の「貯め方・増やし方」のタイプを判定します。備えの厚さと行動スタイルを掛け合わせた16タイプで返ります。</p>
+            <div class="chips">
+                <span class="chip">13問</span>
+                <span class="chip">約3分</span>
+                <span class="chip">個人のお客様向け</span>
+                <span class="chip">PDF保存あり</span>
+            </div>
+            <span class="go">診断をはじめる
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                </svg>
+            </span>
+        </a>
+
+    </div>
+
+    <section class="notice">
+        <h3>お客様に使っていただく前に</h3>
+        <ul>
+            <li>このページは<strong>誰でも開ける公開URL</strong>です。お客様の氏名・連絡先は、いずれの診断にも入力しないでください。</li>
+            <li>回答は<strong>この端末の中だけで処理</strong>され、外部に送信していません。記録を残す場合は、結果画面から<strong>PDFで保存</strong>してください。</li>
+            <li>PDFはお客様の情報です。担当者の端末または社内の指定場所に保管してください。</li>
+        </ul>
+    </section>
+
+    <footer>
+        <span>社内利用・公開前テスト版</span>
+        <span>portal v1.2.0 / ra v3.0.0 / cf v2.0.0 / lp v1.0.0</span>
+    </footer>
+
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var KEY = 'fl_portal_staff';
+    var input = document.getElementById('staff');
+    var note  = document.getElementById('staffNote');
+    var links = { ra: document.getElementById('link-ra'), cf: document.getElementById('link-cf'),
+                  lp: document.getElementById('link-lp') };
+    var noteHtml = note.innerHTML;
+
+    function read() {
+        try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+    }
+    function save(v) {
+        try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {}
+    }
+
+    // URLに ?staff= が付いていればそれを優先（担当者ごとのブックマーク用）
+    var fromUrl = '';
+    try { fromUrl = (new URLSearchParams(location.search).get('staff') || '').trim(); } catch (e) {}
+
+    input.value = fromUrl || read();
+    if (fromUrl) save(fromUrl);
+
+    function syncLinks() {
+        var v = input.value.trim().slice(0, 40);
+        Object.keys(links).forEach(function (k) {
+            links[k].setAttribute('href', k + '/' + (v ? '?staff=' + encodeURIComponent(v) : ''));
+        });
+        if (v) {
+            note.innerHTML = '<span class="staff-saved">' + '「' + v.replace(/[<>&]/g, '') + '」で診断に入ります。</span><br>'
+                + 'この端末にだけ記憶され、次に開いたときも入っています。診断結果のPDFの右上に印字されます。';
+        } else {
+            note.innerHTML = noteHtml;
+        }
+    }
+
+    input.addEventListener('input', function () { save(input.value.trim().slice(0, 40)); syncLinks(); });
+    syncLinks();
+})();
+</script>
+</body>
+</html>

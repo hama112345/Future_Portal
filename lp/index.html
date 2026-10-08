@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>資産形成＆ライフプランニング診断</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        :root {
+            --primary: #0b1329;
+            --accent: #1d4ed8;
+            --accent-hover: #111827;
+            --bg-color: #e2e8f0;       
+            --chat-messages-bg: #f8fafc; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --ai-bubble: #ffffff;
+            --user-bubble: #1d4ed8;
+            --border-light: #e2e8f0;
+            --font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.6; 
+            height: 100vh;
+            height: 100dvh;
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        header { 
+            background-color: var(--primary); 
+            color: #ffffff; 
+            padding: 20px 16px 24px 16px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            z-index: 30; 
+            flex-shrink: 0; 
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        
+        .header-info { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 14px; 
+        }
+        
+        .ai-avatar-header { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background-color: #ffffff; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .header-text {
+            text-align: left;
+        }
+        .header-text h1 { font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: 0.05em; }
+        .header-text p { font-size: 0.8rem; color: #94a3b8; margin: 0; }
+        
+        .progress-text { 
+            font-size: 0.95rem; 
+            font-weight: 700; 
+            color: #ffffff;
+            background: var(--accent); 
+            padding: 4px 16px; 
+            border-radius: 20px; 
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #60a5fa; 
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            width: 100%; 
+            overflow: hidden;
+        }
+        
+        .chat-container { 
+            width: 100%; 
+            max-width: 600px; 
+            display: flex; 
+            flex-direction: column; 
+            background-color: var(--chat-messages-bg); 
+            height: 100%; 
+            border-left: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            position: relative;
+        }
+        
+        .chat-messages { 
+            flex: 1; 
+            padding: 20px 16px; 
+            overflow-y: auto; 
+            scroll-behavior: smooth; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            background-color: var(--chat-messages-bg);
+            padding-bottom: 40px; /* 下部に少し余裕をもたせる */
+        }
+
+        .message-row { display: flex; width: 100%; }
+        .animate-fade { opacity: 0; transform: translateY(10px); animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .ai-row { justify-content: flex-start; }
+        
+        .ai-avatar { 
+            width: 54px; 
+            height: 54px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-right: 12px; 
+            flex-shrink: 0; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            background-color: #ffffff; 
+        }
+        
+        .ai-bubble { background-color: var(--ai-bubble); color: var(--text-main); padding: 14px 18px; border-radius: 4px 18px 18px 18px; max-width: 80%; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-size: 0.95rem; line-height: 1.5; position: relative; border: 1px solid var(--border-light); }
+        
+        .user-row { justify-content: flex-end; }
+        .user-bubble { background-color: var(--user-bubble); color: #ffffff; padding: 12px 18px; border-radius: 18px 4px 18px 18px; max-width: 85%; box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2); font-size: 0.95rem; font-weight: 500; }
+
+        .typing-indicator { display: flex; gap: 4px; padding: 8px 4px; }
+        .dot { width: 6px; height: 6px; background-color: #94a3b8; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* 💡 選択肢エリアが確実に一番上にくるように z-index を追加 */
+        .chat-input-area { 
+            width: 100%; 
+            background: var(--chat-messages-bg); 
+            padding: 12px 16px 24px 16px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            flex-shrink: 0; 
+            border-top: 1px solid var(--border-light);
+            position: relative;
+            z-index: 20;
+        }
+        
+        .option-btn { background-color: #ffffff; border: 2px solid var(--accent); color: var(--accent); border-radius: 20px; padding: 14px 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .option-btn:hover { background-color: var(--accent); color: #ffffff; transform: translateY(-2px); }
+        .start-btn { background-color: var(--primary); color: #ffffff; border: none; border-radius: 20px; padding: 16px 20px; font-size: 1.1rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 12px rgba(11, 19, 41, 0.2); transition: all 0.2s; }
+        .start-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+
+        .back-btn { background-color: transparent; color: var(--text-muted); border: none; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 4px; text-align: center; width: 100%; transition: color 0.2s; }
+        .back-btn:hover { color: var(--text-main); }
+
+        .result-card { text-align: center; margin-top: 8px; width: 100%; }
+        .result-image { display: block; width: 100%; max-height: 400px; margin: 0 auto 16px; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(11, 19, 41, 0.15)); object-fit: contain; }
+        .result-emoji { font-size: 4rem; margin-bottom: 12px; }
+        .result-badge { display: inline-block; background-color: var(--primary); color: #ffffff; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; }
+        .score-display { font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+        .rank-name { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+        .result-message { font-size: 0.9rem; color: var(--text-main); text-align: left; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-light); }
+        .restart-btn { margin-top: 16px; width: 100%; background: #e2e8f0; color: var(--text-main); border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* ===== ポータル版で追加 ===== */
+        header { position: relative; }
+        .to-portal {
+            position: absolute; left: 12px; top: 14px;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: inline-grid; place-items: center;
+            color: rgba(255,255,255,.75); text-decoration: none;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.25);
+        }
+        .to-portal:hover { color: #fff; background: rgba(255,255,255,.22); }
+        .to-portal:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .to-portal svg { width: 15px; height: 15px; }
+
+        .consent-wrap { margin-top: 14px; }
+        .consent-box {
+            background: #f8fafc; border: 1px solid var(--border-light); border-radius: 10px;
+            padding: 12px 14px; max-height: 240px; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            font-size: .78rem; line-height: 1.75; color: var(--text-muted);
+        }
+        .consent-box h4 {
+            font-size: .8rem; font-weight: 800; color: var(--primary);
+            margin: 12px 0 2px;
+        }
+        .consent-box h4:first-child { margin-top: 0; }
+        .consent-box ul { margin: 2px 0 0 1.1em; }
+        .consent-box strong { color: var(--text-main); }
+        .consent-box .to-staff { color: #b91c1c; font-weight: 700; }
+        .consent-check {
+            display: flex; gap: 9px; align-items: flex-start; cursor: pointer;
+            margin-top: 12px; padding: 10px 12px;
+            background: #fff; border: 1px solid var(--border-light); border-radius: 10px;
+            font-size: .82rem; font-weight: 700; color: var(--text-main); line-height: 1.6;
+        }
+        .consent-check input { width: 18px; height: 18px; margin-top: 1px; flex: none; accent-color: var(--accent); }
+        .start-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .scroll-hint { font-size: .74rem; color: var(--text-muted); margin-top: 2px; }
+
+        .result-meta {
+            display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px 14px;
+            font-size: .72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;
+        }
+        .result-meta .print-title { display: none; }
+        .result-meta b { color: var(--primary); font-weight: 800; }
+
+        .answers-dump { margin-top: 18px; text-align: left; }
+        .answers-dump > summary {
+            cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+            font-size: .8rem; font-weight: 800; color: var(--accent);
+            background: #eef4ff; border: 1px solid #c7dafd; border-radius: 999px; padding: 7px 15px;
+        }
+        .answers-dump > summary::-webkit-details-marker { display: none; }
+        .answers-dump > summary::after { content: '▾'; font-size: .8em; }
+        .answers-dump[open] > summary::after { content: '▴'; }
+        .dump-table {
+            width: 100%; border-collapse: collapse; margin-top: 10px;
+            background: #fff; border: 1px solid var(--border-light); border-radius: 10px; overflow: hidden;
+        }
+        .dump-table th, .dump-table td {
+            border-bottom: 1px solid var(--border-light); padding: 7px 9px;
+            font-size: .76rem; line-height: 1.6; text-align: left; vertical-align: top;
+        }
+        .dump-table thead th { background: #f1f5f9; font-size: .72rem; font-weight: 800; color: var(--primary); }
+        .dump-table tbody tr:last-child td { border-bottom: none; }
+        .dump-table .c-no { width: 3.4em; white-space: nowrap; color: var(--text-muted); font-weight: 800; }
+        .dump-table .c-ans { width: 40%; font-weight: 700; color: var(--text-main); }
+
+        .pre-result { display: block; margin-bottom: 14px; }
+        .consent-stamp {
+            margin-top: 14px; padding: 9px 11px; text-align: left;
+            font-size: .72rem; line-height: 1.75; color: var(--text-muted);
+            background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
+        }
+        .consent-stamp b { color: var(--text-main); font-weight: 800; }
+
+        .pdf-btn {
+            margin-top: 14px; width: 100%; background: var(--accent); color: #fff;
+            border: none; padding: 13px; border-radius: 8px;
+            font-family: var(--font-family); font-size: .95rem; font-weight: 800; cursor: pointer;
+        }
+        .pdf-btn:hover { background: var(--accent-hover); }
+        .pdf-btn svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }
+
+        /* ===== 印刷（PDF保存） ===== */
+        @media print {
+            @page { margin: 12mm 10mm; }
+            html, body {
+                background: #fff !important; height: auto !important; overflow: visible !important;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            header, .chat-input-area, .message-row:not(:last-child),
+            .pdf-btn, .restart-btn, .ai-avatar { display: none !important; }
+            main { overflow: visible !important; padding: 0 !important; }
+            .chat-container { box-shadow: none !important; border: none !important; max-width: 100% !important; }
+            .chat-messages { overflow: visible !important; background: none !important; padding: 0 !important; }
+            .ai-bubble {
+                max-width: 100% !important; border: none !important; box-shadow: none !important;
+                padding: 0 !important; background: none !important;
+            }
+            .result-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            .result-meta { justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 7px; }
+            .result-meta .print-title { display: block; font-size: .9rem; font-weight: 800; color: var(--primary); }
+            .result-image { max-height: 150px !important; }
+            .answers-dump > summary, .pre-result { display: none !important; }
+            .dump-table th, .dump-table td { padding: 5px 8px; font-size: .68rem; line-height: 1.45; }
+            .result-card, .dump-table tr, .consent-stamp { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a class="to-portal" href="../" title="ポータルへ戻る" aria-label="ポータルへ戻る">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>
+            </svg>
+        </a>
+        <div class="header-info">
+            <img src="icon.png" alt="AI Avatar" class="ai-avatar-header">
+            <div class="header-text">
+                <h1>AI ライフプラン診断</h1>
+                <p>あなた専用のコンシェルジュ</p>
+            </div>
+        </div>
+        <div class="progress-text" id="headerProgress">0 / 13</div>
+        <div class="progress-wrapper">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message-row ai-row animate-fade">
+                    <img src="icon.png" alt="AI Avatar" class="ai-avatar">
+                    <div class="ai-bubble">
+                        こんにちは！AIコンシェルジュです。<br><br>
+                        13の簡単な質問に答えるだけで、あなたの「お金の貯め方・増やし方」のタイプを診断し、最適なライフプランのヒントをご提案します。<br><br>
+                        はじめる前に、<strong>ご回答の取り扱い</strong>をご確認ください。
+                        <div class="scroll-hint">（枠の中は下にスクロールできます）</div>
+
+                        <div class="consent-wrap">
+                            <div class="consent-box" tabindex="0" aria-label="ご回答の取り扱い">
+                                <h4>お伺いする内容</h4>
+                                年代・家族構成・世帯年収の目安と、各質問への回答（選んだ選択肢）をお伺いします。<br>
+                                <strong>お名前・ご住所・電話番号・メールアドレスはお伺いしません。</strong>
+
+                                <h4>利用目的</h4>
+                                <ul>
+                                    <li>ご本人への診断結果の表示</li>
+                                    <li>その結果にもとづく、担当者とのご相談</li>
+                                </ul>
+
+                                <h4>データの取り扱いについて</h4>
+                                ご回答は<strong>お使いの端末のブラウザの中だけで処理しており、外部に送信していません。</strong>
+                                サーバーにも保存していません。この画面を閉じると、ご回答は残りません。
+
+                                <h4>結果をPDFで残す場合</h4>
+                                ご希望があれば、結果画面から<strong>PDFとして保存・印刷</strong>できます。
+                                PDFには13問の回答、スコアと診断タイプが載ります。<br>
+                                担当者がご相談の記録としてお預かりする場合は、<strong>その場でお申し出ください。</strong>
+                                お預かりしたPDFは、法令に基づく場合を除き、ご本人の同意なく第三者へ提供することはありません。
+
+                                <h4>ご質問・PDFの破棄をご希望の場合</h4>
+                                <span class="to-staff">ご担当のコンサルタントまでお申し出ください。</span>
+                            </div>
+
+                            <label class="consent-check">
+                                <input type="checkbox" id="consentCheck" onchange="onConsentChange()">
+                                <span>上記の内容を確認し、診断の実施と、結果のPDF保存に同意します。</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area" id="inputArea">
+                <button class="start-btn" id="startBtn" onclick="startQuiz()" disabled>同意して診断をスタートする</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const questions = [
+            { q: "あなたの現在の年代を教えてください", options: [{ text: "20代 / 30代", score: 0 }, { text: "40代 / 50代", score: 0 }, { text: "60代以上", score: 0 }] },
+            { q: "現在のライフスタイル（家族構成）に一番近いものはどれですか？", options: [{ text: "単身", score: 0 }, { text: "夫婦のみ", score: 0 }, { text: "夫婦＋子ども", score: 0 }] },
+            { q: "現在の「世帯年収」の目安を教えてください", options: [{ text: "400万未満", score: 0 }, { text: "400万〜700万未満", score: 0 }, { text: "700万〜1000万未満", score: 0 }, { text: "1000万以上", score: 0 }] },
+            { q: "将来のお金について、今一番「なんとかしたい（防ぎたい）」ことは？", options: [{ text: "物価高による生活費の圧迫、日々のやりくりの限界", score: 0 }, { text: "自分や家族の健康問題（休職・介護）による急な収入減", score: 0 }, { text: "老後資金の枯渇や、教育費・まとまった出費", score: 0 }] },
+            { q: "もし明日から半年間働けなくなったら？", options: [{ text: "貯金や制度で十分カバーできる", score: 15 }, { text: "切り詰めればギリギリ耐えられる", score: 5 }, { text: "すぐに行き詰まる", score: 0 }] },
+            { q: "今、急なトラブルで現金100万円が必要になったら？", options: [{ text: "預貯金からすぐに出せる", score: 15 }, { text: "痛手だけど払える", score: 5 }, { text: "ローンや借り入れが必要", score: 0 }] },
+            { q: "住宅ローン以外の借り入れ（リボ、マイカー等）はありますか？", options: [{ text: "一切ない（または住宅ローンのみ）", score: 15 }, { text: "車のローンや奨学金などの計画的な返済がある", score: 5 }, { text: "リボ払いやカードローンなど、金利が高めの借り入れがある", score: 0 }] },
+            { q: "NISAやiDeCoなどお金に働いてもらう仕組みは？", options: [{ text: "すでに自分で調べ、納得した上で運用を始めている", score: 15, type: "A" }, { text: "プロに正解を教えてほしい", score: 10, type: "B" }, { text: "とりあえず少額から見切り発車でやっている", score: 15, type: "C" }, { text: "難しそうで後回しにしている、または興味がない", score: 0, type: "D" }] },
+            { q: "毎月「貯金」や「投資」に回せている金額は？", options: [{ text: "毎月5万円以上しっかり仕組み化できている", score: 20, type: "A" }, { text: "月によってバラつきはあるが、1〜5万円は回せている", score: 10, type: "B" }, { text: "毎月1万円未満、または全く回せていない", score: 0, type: "D" }] },
+            { q: "資産運用へのスタンスはどれに近いですか？", options: [{ text: "絶対損したくないので徹底的に調べたい", score: 0, type: "A" }, { text: "専門家と一緒に手堅く進めたい", score: 5, type: "B" }, { text: "多少のリスクは許容して実践しながら覚えたい", score: 10, type: "C" }, { text: "日々忙しいので「何もしなくていい」が一番", score: 5, type: "D" }] },
+            { q: "老後や教育費に「いくら必要か」計算したことは？", options: [{ text: "ツール等を使い自分なりに目標金額を計算している", score: 10, type: "A" }, { text: "一度プロに正確な数字を出してほしい", score: 5, type: "B" }, { text: "ざっくりとしたイメージはあるが細かく計算するのは面倒", score: 5, type: "C" }, { text: "全く計算したことがなく、現実を見るのが怖い", score: 0, type: "D" }] },
+            { q: "新しいお金の情報を耳にしたときの行動は？", options: [{ text: "徹底的に調べて納得してから動く", score: 0, type: "A" }, { text: "詳しい人やプロに正解を教えてもらう", score: 0, type: "B" }, { text: "面白そうならパッと始めてみる", score: 0, type: "C" }, { text: "面倒くさくて後回しにする", score: 0, type: "D" }] },
+            { q: "数万円の買い物をするときの基準は？", options: [{ text: "口コミを何日も比較検討してコスパが良いものを買う", score: 0, type: "A" }, { text: "店員のおすすめや人気ランキング1位を買う", score: 0, type: "B" }, { text: "直感や最新機能のものをサッと買う", score: 0, type: "C" }, { text: "本当に壊れて動かなくなるギリギリまで買わない", score: 0, type: "D" }] }
+        ];
+
+        const matrixResults = {
+            "S": {
+                "A": { title: "【データ分析・自力追求】 賢者のフクロウ", msg: "現在のポートフォリオおよびリスクへの備えは非常に高い水準にあります。今後は最新の税制や特例を網羅し、さらに最適化された効率的な運用を目指せる状態です。" },
+                "B": { title: "【プロフェッショナル相談】 威風堂々ゾウ", msg: "安定的な基盤を構築できています。次のステップとして、ご自身での管理負荷を軽減し、より多角的な視点から資産効率を最大化する戦略の検討が推奨されます。" },
+                "C": { title: "【アクティブ行動・実践重視】 百獣の王ライオン", msg: "防衛力・行動力ともにトップクラスです。現在は高い成長性を取り込めていますが、今後は「攻めと守りの精緻な分散」を行うことで、さらに強固なポートフォリオが完成します。" },
+                "D": { title: "【ポテンシャル内包・慎重検討】 冬眠中のヒグマ", msg: "十分な原資や防衛基盤をお持ちですが、一部の資産が非効率な状態で維持されている可能性があります。「自動的に最適化される仕組み」の導入が有効です。" }
+            },
+            "A": {
+                "A": { title: "【データ分析・自力追求】 計算高いキツネ", msg: "知識や分析力は非常に高い反面、実際の行動フェーズでやや機会損失が発生している可能性があります。理論的な裏付けをもとに、早期の第一歩を踏み出すことが鍵となります。" },
+                "B": { title: "【プロフェッショナル相談】 待機中のレトリバー", msg: "資産形成への準備や意識は非常に高い状態です。あとは信頼できるパートナーや確かな指針を確定させることで、迷いなく理想のライフプランを実行へ移せる状態です。" },
+                "C": { title: "【アクティブ行動・実践重視】 疾走サラブレッド", msg: "積極的な行動力をお持ちです。ここからさらにライフプランの「軸」となる目標金額を明確に定義し、逆算型の投資を組み合わせることで確実性が大幅に向上します。" },
+                "D": { title: "【ポテンシャル内包・慎重検討】 マイペースなコアラ", msg: "潜在的な投資余力を十分に持たれていますが、「手間の多さ」がボトルネックとなり停滞している状態です。極力手間を排除したソリューションの選定が推奨されます。" }
+            },
+            "B": {
+                "A": { title: "【データ分析・自力追求】 情報収集リス", msg: "情報収集には熱心ですが、日々の資金繰りやコストバランスに追われがちです。まずは投資を始める前に、固定費の解剖や効率化による「投資原資の捻出」を優先しましょう。" },
+                "B": { title: "【プロフェッショナル相談】 迷えるモフモフ羊", msg: "現状維持に対する漠然とした懸念をお持ちです。まずは専門的な知見をもとに「現在の家計構造の正確なシミュレーション」を行い、客観的な現在地を把握することをお勧めします。" },
+                "C": { title: "【アクティブ行動・実践重視】 猪突猛進イノシシ", msg: "投資への関心が高い一方、万が一の際のキャッシュリザーブ（防衛資金）が不足しているリスクがあります。まずは手堅い地盤（守り）の確保を優先すべきタイミングです。" },
+                "D": { title: "【ポテンシャル内包・慎重検討】 ぶら下がりナマケモノ", msg: "現状の収支に対してやや支出過多の傾向が見られます。意志の力に頼らず、システムとして強制的に先取り貯蓄を行う環境づくりが必要です。" }
+            },
+            "C": {
+                "A": { title: "【データ分析・自力追求】 警戒マックスのカメ", msg: "部分的な知識が先行し、高コストな負債や支出を見落としているリスクがあります。まずは資産運用の前に、現在の債務状況や非効率な固定費の「止血」を最優先してください。" },
+                "B": { title: "【プロフェッショナル相談】 氷の上のペンギン", msg: "生活基盤の早期の立て直しが必要なシグナルが出ています。まずは複雑な運用のことは考えず、毎月の収支状況を一度シンプルに整理・把握することから始めましょう。" },
+                "C": { title: "【アクティブ行動・実践重視】 落ち着きのないウサギ", msg: "一発逆転を狙ったハイリスクな投資に惹かれやすい状態です。資産形成に近道はありません。地道かつ堅実な「家計の基礎体力づくり」に意識を向けることが最優先です。" },
+                "D": { title: "【ポテンシャル内包・慎重検討】 現実逃避のダチョウ", msg: "現状の収支に対してやや現実逃避傾向が見られます。問題が深刻化する前に、現状の赤字要素を正視し、今日からできる極めてハードルの低い支出削減リストを実行しましょう。" }
+            }
+        };
+
+        const animalEmojis = {
+            "S_A": "🦉", "S_B": "🐘", "S_C": "🦁", "S_D": "🐻",
+            "A_A": "🦊", "A_B": "🦮", "A_C": "🐎", "A_D": "🐨",
+            "B_A": "🐿️", "B_B": "🐑", "B_C": "🐗", "B_D": "🦥",
+            "C_A": "🐢", "C_B": "🐧", "C_C": "🐰", "C_D": "🙈"
+        };
+
+        const APP_VERSION     = 'v1.0.0';
+        const CONSENT_VERSION = '2026-10-08';
+        let consentedAt = '';
+
+        function onConsentChange() {
+            const ok = document.getElementById('consentCheck').checked;
+            document.getElementById('startBtn').disabled = !ok;
+            if (ok && !consentedAt) consentedAt = new Date().toISOString();
+        }
+
+        function lpEsc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function lpStaff() {
+            try { return (new URLSearchParams(location.search).get('staff') || '').trim().slice(0, 40); }
+            catch (e) { return ''; }
+        }
+
+        function stamp(iso) {
+            const d = iso ? new Date(iso) : new Date();
+            if (isNaN(d.getTime())) return '';
+            const p = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate())
+                 + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+        }
+
+        function todayLabel() { return stamp('').slice(0, 10); }
+
+        function answersDumpHtml() {
+            const rows = questionSequence.map((qIdx, i) => {
+                const q = questions[qIdx];
+                const optIdx = userAnswers[qIdx];
+                const ans = (optIdx === undefined) ? '—' : q.options[optIdx].text;
+                return `<tr><td class="c-no">Q${i + 1}</td><td>${lpEsc(q.q)}</td>`
+                     + `<td class="c-ans">${lpEsc(ans)}</td></tr>`;
+            }).join('');
+            return `
+                <details class="answers-dump">
+                    <summary>回答の控えを見る（PDFにも載ります）</summary>
+                    <table class="dump-table">
+                        <thead><tr><th>No.</th><th>設問</th><th>回答</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </details>`;
+        }
+
+        function consentStampHtml() {
+            if (!consentedAt) return '';
+            return '<p class="consent-stamp">ご本人が回答の取り扱いをご確認のうえ、診断の実施と結果のPDF保存に同意されました。'
+                 + `（同意日時 <b>${lpEsc(stamp(consentedAt))}</b>　／　同意文の版 ${lpEsc(CONSENT_VERSION)}）</p>`;
+        }
+
+        function printResult() {
+            const d = document.querySelector('.answers-dump');
+            if (d) d.open = true;
+            setTimeout(() => window.print(), 60);
+        }
+
+        window.addEventListener('beforeprint', () => {
+            const d = document.querySelector('.answers-dump');
+            if (d) { d.dataset.wasOpen = d.open ? '1' : ''; d.open = true; }
+        });
+        window.addEventListener('afterprint', () => {
+            const d = document.querySelector('.answers-dump');
+            if (d && !d.dataset.wasOpen) d.open = false;
+        });
+
+        let currentStep = 0; 
+        let questionSequence = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; 
+        let userAnswers = {}; 
+        let isProcessing = false;
+
+        const chatMessages = document.getElementById('chatMessages');
+        const inputArea = document.getElementById('inputArea');
+        const headerProgress = document.getElementById('headerProgress');
+        const progressFill = document.getElementById('progressFill');
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                if(chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 50);
+        }
+
+        // 💡 エラー回避：要素を安全に削除する仕組みを強化
+        function removeElement(id) {
+            const el = document.getElementById(id);
+            if (el && el.parentNode) {
+                el.parentNode.removeChild(el);
+            }
+        }
+
+        function showTypingIndicator() {
+            const typingId = 'typing-' + Date.now() + Math.floor(Math.random() * 1000);
+            const html = `
+                <div class="message-row ai-row animate-fade" id="${typingId}">
+                    <img src="icon.png" alt="AI Avatar" class="ai-avatar">
+                    <div class="ai-bubble">
+                        <div class="typing-indicator">
+                            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+            return typingId;
+        }
+
+        function appendAIMessage(text, noAnimate = false) {
+            const animClass = noAnimate ? '' : 'animate-fade';
+            const html = `
+                <div class="message-row ai-row ${animClass}">
+                    <img src="icon.png" alt="AI Avatar" class="ai-avatar">
+                    <div class="ai-bubble">${text}</div>
+                </div>
+            `;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            if (!noAnimate) scrollToBottom();
+        }
+
+        function appendUserMessage(text, noAnimate = false) {
+            const animClass = noAnimate ? '' : 'animate-fade';
+            const html = `
+                <div class="message-row user-row ${animClass}">
+                    <div class="user-bubble">${text}</div>
+                </div>
+            `;
+            chatMessages.insertAdjacentHTML('beforeend', html);
+            if (!noAnimate) scrollToBottom();
+        }
+
+        function rebuildChat(targetStep) {
+            chatMessages.innerHTML = '';
+            appendAIMessage("こんにちは！AIコンシェルジュです。<br><br>13の簡単な質問に答えるだけで、あなたの「お金の貯め方・増やし方」のタイプを診断し、最適なライフプランのヒントをご提案します。", true);
+
+            for (let i = 0; i < targetStep; i++) {
+                let qIdx = questionSequence[i];
+                appendAIMessage(`<strong>【Q${i + 1}】</strong><br>${questions[qIdx].q}`, true);
+                
+                let optIdx = userAnswers[qIdx];
+                if (optIdx !== undefined) {
+                    let optText = questions[qIdx].options[optIdx].text;
+                    appendUserMessage(optText, true);
+                }
+
+                if (i === 3) {
+                    appendAIMessage("回答ありがとうございます。<br>基礎データとの照合を行い、<b>あなた専用の診断プロセスを生成中…</b>", true);
+                    appendAIMessage("質問の最適化が完了しました。それでは、診断を再開します！", true);
+                }
+            }
+            scrollToBottom();
+        }
+
+        function goBack() {
+            if (isProcessing || currentStep === 0) return;
+            isProcessing = true;
+            inputArea.innerHTML = ''; 
+
+            currentStep--;
+            rebuildChat(currentStep);
+            
+            // 確実に戻る処理を実行させる
+            setTimeout(() => {
+                showQuestion();
+            }, 100);
+        }
+
+        function startQuiz() {
+            if (isProcessing) return;
+            isProcessing = true;
+            inputArea.innerHTML = '';
+
+            const typingId = showTypingIndicator();
+            
+            setTimeout(() => {
+                try {
+                    removeElement(typingId);
+                    appendAIMessage("ありがとうございます！それでは診断をスタートしますね。");
+                    setTimeout(() => {
+                        showQuestion();
+                    }, 400);
+                } catch (e) {
+                    console.error("Error in startQuiz:", e);
+                    isProcessing = false; // エラー時でもロックを解除
+                }
+            }, 500);
+        }
+
+        function showQuestion() {
+            try {
+                headerProgress.innerText = `${currentStep + 1} / ${questions.length}`;
+                progressFill.style.width = `${(currentStep / questions.length) * 100}%`;
+                
+                const typingId = showTypingIndicator();
+                const actualQuestionIndex = questionSequence[currentStep];
+                const currentQuestion = questions[actualQuestionIndex];
+
+                setTimeout(() => {
+                    try {
+                        removeElement(typingId);
+                        appendAIMessage(`<strong>【Q${currentStep + 1}】</strong><br>${currentQuestion.q}`);
+                        
+                        inputArea.innerHTML = '';
+                        currentQuestion.options.forEach((option, index) => {
+                            const btn = document.createElement('button');
+                            btn.className = 'option-btn';
+                            btn.innerText = option.text;
+                            btn.onclick = () => handleOptionClick(index, option.text);
+                            inputArea.appendChild(btn);
+                        });
+
+                        if (currentStep > 0) {
+                            const backBtn = document.createElement('button');
+                            backBtn.className = 'back-btn';
+                            backBtn.innerText = '↩️ 1つ前の質問に戻る';
+                            backBtn.onclick = goBack;
+                            inputArea.appendChild(backBtn);
+                        }
+                        
+                        scrollToBottom();
+                        isProcessing = false;
+                    } catch(e) {
+                        console.error("Error in showQuestion Timeout:", e);
+                        isProcessing = false;
+                    }
+                }, 800); 
+            } catch (e) {
+                console.error("Error in showQuestion:", e);
+                isProcessing = false;
+            }
+        }
+
+        function handleOptionClick(optionIndex, optionText) {
+            if (isProcessing) return; 
+            isProcessing = true;
+            inputArea.innerHTML = '';
+            
+            appendUserMessage(optionText);
+
+            const actualQuestionIndex = questionSequence[currentStep];
+            userAnswers[actualQuestionIndex] = optionIndex; 
+            
+            if (actualQuestionIndex === 3) {
+                if (optionIndex === 0) questionSequence = [0, 1, 2, 3, 8, 6, 5, 4, 7, 9, 10, 11, 12];
+                else if (optionIndex === 1) questionSequence = [0, 1, 2, 3, 4, 5, 8, 6, 7, 9, 10, 11, 12];
+                else if (optionIndex === 2) questionSequence = [0, 1, 2, 3, 10, 7, 9, 4, 5, 6, 8, 11, 12];
+                
+                currentStep++;
+                
+                const analyzingId = showTypingIndicator();
+                setTimeout(() => {
+                    removeElement(analyzingId);
+                    appendAIMessage("回答ありがとうございます。<br>基礎データとの照合を行い、<b>あなた専用の診断プロセスを生成中…</b>");
+                    
+                    const buildId = showTypingIndicator();
+                    setTimeout(() => {
+                        removeElement(buildId);
+                        appendAIMessage("質問の最適化が完了しました。それでは、診断を再開します！");
+                        
+                        const nextId = showTypingIndicator();
+                        setTimeout(() => {
+                            removeElement(nextId);
+                            showQuestion();
+                        }, 1000); 
+
+                    }, 4000); 
+                }, 1000);
+
+                return; 
+            }
+
+            currentStep++;
+            
+            if (currentStep < questions.length) {
+                setTimeout(showQuestion, 500);
+            } else {
+                setTimeout(calculateAndShowResult, 500);
+            }
+        }
+
+        function calculateAndShowResult() {
+            headerProgress.innerText = "診断完了";
+            progressFill.style.width = "100%"; 
+            
+            const typingId = showTypingIndicator();
+
+            setTimeout(() => {
+                try {
+                    removeElement(typingId);
+                    appendAIMessage("すべての質問が完了しました！<br>回答データを分析しています...");
+                    
+                    const analyzingId = showTypingIndicator();
+
+                    setTimeout(() => {
+                        removeElement(analyzingId);
+                        
+                        let totalScore = 0;
+                        let typeCounts = { A: 0, B: 0, C: 0, D: 0 };
+
+                        for (let qIdx = 0; qIdx < questions.length; qIdx++) {
+                            const optIdx = userAnswers[qIdx];
+                            if (optIdx === undefined) continue;
+                            const chosenOption = questions[qIdx].options[optIdx];
+                            totalScore += chosenOption.score || 0;
+                            if (chosenOption.type && typeCounts[chosenOption.type] !== undefined) typeCounts[chosenOption.type]++;
+                            if (qIdx === 8 && chosenOption.score === 10) typeCounts['C']++;
+                        }
+                        
+                        let rank = "C", rankName = "安定的な資産形成に向け、まずは基盤を固めるフェーズです";
+                        if (totalScore >= 80) { rank = "S"; rankName = "高い水準で安定しています。さらなる最適化を目指せる状態です"; }
+                        else if (totalScore >= 55) { rank = "A"; rankName = "ポテンシャルは十分ですが、やや機会損失のリスクがあります"; }
+                        else if (totalScore >= 25) { rank = "B"; rankName = "万が一への備えや、家計バランスの調整が推奨される状態です"; }
+
+                        let maxType = "D", maxCount = -1;
+                        ["A", "B", "C", "D"].forEach(t => {
+                            if (typeCounts[t] > maxCount) { maxCount = typeCounts[t]; maxType = t; }
+                        });
+                        
+                        const finalResult = matrixResults[rank][maxType];
+                        const imgKey = `${rank}_${maxType}`;
+                        // 画像のファイル名は小文字。GitHub Pages は大文字小文字を区別するため必ず小文字にする
+                        const imgFile = `result_${imgKey.toLowerCase()}.png`;
+                        const emoji = animalEmojis[imgKey] || "🐾";
+                        const staff = lpStaff();
+
+                        const resultHtml = `
+                            <div class="result-card">
+                                <div class="result-meta">
+                                    <span class="print-title">資産形成＆ライフプランニング診断　結果</span>
+                                    <span>実施日 <b>${todayLabel()}</b>${staff ? `　／　担当 <b>${lpEsc(staff)}</b>` : ''}</span>
+                                </div>
+                                <img src="${imgFile}" alt="診断結果イラスト" class="result-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="result-emoji" style="display: none;">${emoji}</div>
+                                <div class="result-badge">${finalResult.title}</div>
+                                <div class="score-display">${totalScore} 点</div>
+                                <div class="rank-name">${rankName}</div>
+                                <div class="result-message">${finalResult.msg}</div>
+                                ${answersDumpHtml()}
+                                ${consentStampHtml()}
+                                <button type="button" class="pdf-btn" onclick="printResult()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M6 9V3h12v6"/><path d="M6 18H4v-6h16v6h-2"/>
+                                        <rect x="6" y="14" width="12" height="7" rx="1"/>
+                                    </svg>結果をPDFで保存する
+                                </button>
+                                <button class="restart-btn" onclick="location.reload()">最初からやり直す</button>
+                            </div>
+                        `;
+                        appendAIMessage('<span class="pre-result">お待たせしました。あなたの診断結果はこちらです！</span>' + resultHtml);
+
+                    }, 2000); 
+                } catch (e) {
+                    console.error("Error in result generation:", e);
+                    isProcessing = false;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
